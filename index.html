@@ -436,7 +436,7 @@ var PROFCFG = {
     tabs:['📞 A confirmer','✅ Traitées','📋 Journee','🚚 Livraisons','📡 Noest','📊 Production','🗃️ Inventaire','👥 Contact'],
     fns:['rZahraConf','rZahraConfirmees','rZahraJour','rNesBilel','rNesNoest','rZahraProd','rZahraInv','rContact']},
   nesrine:{name:'Nesrine',ic:'📱',color:'#6C3483',
-    tabs:['📊 Dashboard','➕ Cmde','📦 Stock','📞 Confirm.','✅ Traitées','🚚 Livraisons','📡 Noest','🏭 Atelier','💸 Moh','🔧 Matieres','👥 Contact'],
+    tabs:['📊 Dashboard','➕ Cmde','📦 Stock','📞 Confirm.','✅ Traitées','🚚 Livraisons','📡 Noest','🏭 Atelier','💸 Moh','🛒 Achats','👥 Contact'],
     fns:['rNesDash','rNesCmde','rNesStock','rNesConfirm','rZahraConfirmees','rNesBilel','rNesNoest','rNesAtelier','rNesPayer','rNesAchats','rContact']},
   mehdi:{name:'Mehdi',ic:'📊',color:'#185FA5',
     tabs:['📊 Dashboard','📦 Cmdes','📞 A conf.','✅ Traitées','🚚 Livraisons','📡 Noest','📊 Situation','🏭 Prod.','📦 Stock','👥 Equipe','🚚 Bilel','📈 Ads','👥 Contact'],
@@ -4352,7 +4352,89 @@ function payMoh(sol){
 }
 
 // ── NESRINE ACHATS ──
-function rNesAchats(div){ rMohStock(div); }
+function rNesAchats(div){
+  // Identique à l'onglet Matières de Moh — même affichage, même possibilité de modifier
+  getAPI('stock_intrants',function(r){
+    var intrants=r.intrants||[];
+    function getActuel(id){var f=intrants.find(function(i){return i.id===id;});return f?(f.actuel||0):0;}
+    function getMin(id){var f=intrants.find(function(i){return i.id===id;});return f?f.min:(INTRANTS.find(function(x){return x.id===id;})||{min:3}).min;}
+
+    var al=intrants.filter(function(i){return i.actuel<=i.min;});
+    var html=al.length
+      ?'<div class="alrt">⚠️ '+al.length+' intrant(s) sous le seuil — <button class="btn-sm" style="background:#E74C3C;display:inline;margin-left:8px;padding:3px 8px" onclick="alerteIntr()">📱 Alerter</button></div>'
+      :'';
+
+    // ── Section 1 : Matières à dimension ──
+    var DIMS_MATS=[
+      {key:'caisson',     n:'Caisson bois',      em:'🪵', prefix:'caisson_'},
+      {key:'verre_clair', n:'Verre clair 5mm',   em:'🔲', prefix:'verre_clair_'},
+      {key:'verre_bronze',n:'Verre bronze 5mm',  em:'🟫', prefix:'verre_bronze_'},
+    ];
+    html+='<div class="slt">🪵 Matières par dimension</div>';
+    DIMS_MATS.forEach(function(mat){
+      html+='<div class="card" style="padding:10px 12px;margin-bottom:8px">'
+        +'<div style="font-size:12px;font-weight:700;color:#ddd;margin-bottom:8px">'+mat.em+' '+mat.n+'</div>'
+        +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">';
+      DIMS.forEach(function(dim){
+        var id=mat.prefix+dim.replace('cm','');
+        var actuel=getActuel(id); var min=getMin(id);
+        var col=actuel<=min?'var(--r)':actuel<=min*1.5?'var(--o)':'var(--g)';
+        html+='<div style="background:#0A0A14;border-radius:10px;padding:8px;text-align:center;cursor:pointer;border:1px solid '
+          +(actuel<=min?'rgba(231,76,60,.4)':actuel<=min*1.5?'rgba(243,156,18,.3)':'rgba(39,174,96,.2)')
+          +'" onclick="_editIntrDim(\''+id+'\',\''+mat.n+' '+dim+'\','+actuel+','+min+')">'
+          +'<div style="font-size:9px;color:#888;margin-bottom:2px">'+dim+'</div>'
+          +'<div style="font-size:18px;font-weight:900;color:'+col+'">'+actuel+'</div>'
+          +'<div style="font-size:9px;color:#555">min:'+min+'</div>'
+          +'</div>';
+      });
+      html+='</div></div>';
+    });
+
+    // ── Section 2 : Electronique ──
+    var ELEC_IDS=['moteur','telecommande','led','transfo','fiches','dominos','cable25','cable_plat','prise','fixation'];
+    html+='<div class="slt">⚡ Electronique & câblage</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">';
+    ELEC_IDS.forEach(function(id){
+      var intr=INTRANTS.find(function(x){return x.id===id;})||{};
+      var actuel=getActuel(id); var min=getMin(id);
+      var col=actuel<=min?'var(--r)':actuel<=min*1.5?'var(--o)':'var(--g)';
+      html+='<div style="background:#0A0A14;border-radius:10px;padding:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border:1px solid '
+        +(actuel<=min?'rgba(231,76,60,.3)':'var(--brd)')
+        +'" onclick="_editIntrSimple(\''+id+'\',\''+h(intr.n||id)+'\','+actuel+','+min+')">'
+        +'<div>'
+          +'<div style="font-size:11px;font-weight:600">'+(intr.em||'📦')+' '+h(intr.n||id)+'</div>'
+          +'<div style="font-size:10px;color:#666">min: '+min+'</div>'
+        +'</div>'
+        +'<div style="font-size:20px;font-weight:900;color:'+col+'">'+actuel+'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+
+    // ── Section 3 : Consommables ──
+    var CONS_IDS=['silicone','colle_tube','akfix','diluant','peinture','logo','baguette','branches','carton_laser','cellophane','emballage'];
+    html+='<div class="slt">🧴 Consommables & emballage</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">';
+    CONS_IDS.forEach(function(id){
+      var intr=INTRANTS.find(function(x){return x.id===id;})||{};
+      var actuel=getActuel(id); var min=getMin(id);
+      var col=actuel<=min?'var(--r)':actuel<=min*1.5?'var(--o)':'var(--g)';
+      html+='<div style="background:#0A0A14;border-radius:10px;padding:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border:1px solid '
+        +(actuel<=min?'rgba(231,76,60,.3)':'var(--brd)')
+        +'" onclick="_editIntrSimple(\''+id+'\',\''+h(intr.n||id)+'\','+actuel+','+min+')">'
+        +'<div>'
+          +'<div style="font-size:11px;font-weight:600">'+(intr.em||'📦')+' '+h(intr.n||id)+'</div>'
+          +'<div style="font-size:10px;color:#666">min: '+min+'</div>'
+        +'</div>'
+        +'<div style="font-size:20px;font-weight:900;color:'+col+'">'+actuel+'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+
+    div.innerHTML=html;
+    div._intrants=intrants;
+  });
+}
+
 // ═══════════════════════════════════════
 // ── MEHDI ──
 // ═══════════════════════════════════════════════════════════════════
