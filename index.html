@@ -1543,6 +1543,315 @@ function rMohCompte(div){
 
 // ═══════════════════════════════════════
 // ── BILEL LIVRAISONS ──
+
+// ══════════════════════════════════════════════════════════
+// PLANIFICATION TOURNÉE BILEL — depuis Boumerdès
+// ══════════════════════════════════════════════════════════
+
+// Coordonnées approximatives des wilayas algériennes
+var WILAYA_GEO = {
+  // Centre
+  'Alger':{'lat':36.737,'lng':3.086,'region':'Centre','dist':45},
+  'Blida':{'lat':36.470,'lng':2.828,'region':'Centre','dist':55},
+  'Boumerdes':{'lat':36.762,'lng':3.477,'region':'Centre','dist':5},
+  'Tipaza':{'lat':36.590,'lng':2.448,'region':'Centre','dist':85},
+  'Tizi Ouzou':{'lat':36.717,'lng':4.046,'region':'Centre','dist':60},
+  'Bouira':{'lat':36.373,'lng':3.900,'region':'Centre','dist':80},
+  'Medea':{'lat':36.264,'lng':2.752,'region':'Centre','dist':110},
+  'Ain Defla':{'lat':36.264,'lng':1.966,'region':'Ouest','dist':180},
+  // Est
+  'Bejaia':{'lat':36.750,'lng':5.083,'region':'Est','dist':160},
+  'Jijel':{'lat':36.820,'lng':5.767,'region':'Est','dist':230},
+  'Setif':{'lat':36.190,'lng':5.408,'region':'Est','dist':220},
+  'Bordj Bou Arreridj':{'lat':36.074,'lng':4.763,'region':'Est','dist':190},
+  'Mila':{'lat':36.450,'lng':6.267,'region':'Est','dist':300},
+  'Constantine':{'lat':36.365,'lng':6.614,'region':'Est','dist':360},
+  'Skikda':{'lat':36.876,'lng':6.906,'region':'Est','dist':400},
+  'Annaba':{'lat':36.900,'lng':7.767,'region':'Est','dist':470},
+  'Guelma':{'lat':36.462,'lng':7.430,'region':'Est','dist':430},
+  'El Tarf':{'lat':36.767,'lng':8.313,'region':'Est','dist':510},
+  'Souk Ahras':{'lat':36.286,'lng':7.951,'region':'Est','dist':470},
+  'Oum El Bouaghi':{'lat':35.870,'lng':7.114,'region':'Est','dist':390},
+  'Batna':{'lat':35.556,'lng':6.174,'region':'Est','dist':340},
+  'Khenchela':{'lat':35.433,'lng':7.143,'region':'Est','dist':420},
+  'Tebessa':{'lat':35.400,'lng':8.120,'region':'Est','dist':520},
+  'Biskra':{'lat':34.850,'lng':5.728,'region':'Est','dist':380},
+  // Ouest
+  'Oran':{'lat':35.697,'lng':-0.634,'region':'Ouest','dist':360},
+  'Mostaganem':{'lat':35.931,'lng':0.089,'region':'Ouest','dist':310},
+  'Relizane':{'lat':35.738,'lng':0.556,'region':'Ouest','dist':270},
+  'Chlef':{'lat':36.165,'lng':1.330,'region':'Ouest','dist':200},
+  'Ain Temouchent':{'lat':35.298,'lng':-1.140,'region':'Ouest','dist':430},
+  'Tlemcen':{'lat':34.878,'lng':-1.315,'region':'Ouest','dist':480},
+  'Sidi Bel Abbes':{'lat':35.190,'lng':-0.630,'region':'Ouest','dist':400},
+  'Mascara':{'lat':35.395,'lng':0.140,'region':'Ouest','dist':340},
+  'Tiaret':{'lat':35.371,'lng':1.327,'region':'Ouest','dist':300},
+  'Tissemsilt':{'lat':35.607,'lng':1.812,'region':'Ouest','dist':260},
+  'Saida':{'lat':34.830,'lng':0.151,'region':'Ouest','dist':380},
+  'Naama':{'lat':33.267,'lng':-0.317,'region':'Hauts Plateaux','dist':500},
+  // Hauts Plateaux
+  'Djelfa':{'lat':34.670,'lng':3.263,'region':'Hauts Plateaux','dist':280},
+  'Laghouat':{'lat':33.800,'lng':2.863,'region':'Hauts Plateaux','dist':380},
+  'Msila':{'lat':35.706,'lng':4.544,'region':'Hauts Plateaux','dist':240},
+  'Boussaada':{'lat':35.217,'lng':4.183,'region':'Hauts Plateaux','dist':260},
+};
+
+// Départ : Boumerdès ville
+var DEPART = {lat:36.762, lng:3.477, nom:'Boumerdès'};
+
+function _regionColor(r){
+  return r==='Centre'?'#3498db':r==='Est'?'#e74c3c':r==='Ouest'?'#27ae60':'#e67e22';
+}
+function _regionEmoji(r){
+  return r==='Centre'?'🔵':r==='Est'?'🔴':r==='Ouest'?'🟢':'🟠';
+}
+
+// Algorithme nearest-neighbor pour optimiser l'itinéraire
+function _optimiserTournee(stops){
+  if(!stops.length) return [];
+  var reste=stops.slice();
+  var route=[];
+  var pos={lat:DEPART.lat,lng:DEPART.lng};
+
+  while(reste.length){
+    var best=null,bestDist=Infinity,bestIdx=0;
+    reste.forEach(function(s,i){
+      var d=Math.sqrt(Math.pow(s.lat-pos.lat,2)+Math.pow(s.lng-pos.lng,2));
+      if(d<bestDist){bestDist=d;best=s;bestIdx=i;}
+    });
+    route.push(best);
+    pos={lat:best.lat,lng:best.lng};
+    reste.splice(bestIdx,1);
+  }
+  return route;
+}
+
+function _mapsUrl(stops){
+  // Google Maps directions depuis Boumerdès avec waypoints optimisés
+  var base='https://www.google.com/maps/dir/';
+  var pts=[DEPART.lat+','+DEPART.lng];
+  stops.forEach(function(s){ pts.push(encodeURIComponent(s.wilaya+', Algérie')); });
+  pts.push(DEPART.lat+','+DEPART.lng); // retour
+  return base+pts.join('/');
+}
+
+function planifierTournee(){
+  // Charger stock + intrants en parallèle pour analyse disponibilité
+  getAPIs(['commandes_bilel','stock_elec','stock_intrants'],function(_d){
+    var enAtt=(_cmdes||[]).filter(function(c){
+      var p=String(c.situation||'').toLowerCase();
+      return !p.includes('livr')&&!p.includes('retour')&&!p.includes('annul');
+    });
+
+    if(!enAtt.length){alert('Aucune livraison en attente !');return;}
+
+    var stockElec=(_d['stock_elec']||{}).stock||[];
+    var intrants=(_d['stock_intrants']||{}).intrants||[];
+
+    // Checker stock disponible par dimension
+    function stockDim(dim){
+      var s=stockElec.find(function(x){return x.dim===dim||x.dimension===dim;});
+      return s?parseInt(s.actuel)||0:0;
+    }
+    function stockCaisson(dim){
+      var id='caisson_'+dim.replace('cm','');
+      var f=intrants.find(function(i){return i.id===id;});
+      return f?parseInt(f.actuel)||0:999;
+    }
+
+    // Enrichir commandes avec geo + analyse stock
+    var stops=enAtt.map(function(c){
+      var geo=WILAYA_GEO[c.wilaya]||{lat:36.5,lng:3.0,region:'Centre',dist:100};
+      var dimMatch=String(c.variant||c.produit||'').match(/(\d+cm)/i);
+      var dim=dimMatch?dimMatch[1]:'';
+      var stockChim=dim?stockDim(dim):0;
+      var stockCais=dim?stockCaisson(dim):999;
+      var peutLivrer=stockChim>0; // cheminée disponible en stock
+      var mohDoitProduire=!peutLivrer&&stockCais>0; // matière ok mais cheminée pas prête
+      // Date de commande pour priorité
+      var dateRaw=String(c.date||'');
+      var dateTs=0;
+      if(dateRaw){var parts=dateRaw.split('/');if(parts.length===3)dateTs=new Date(parts[2],parts[1]-1,parts[0]).getTime();}
+      var ageJours=dateTs?Math.floor((Date.now()-dateTs)/864e5):0;
+      return Object.assign({},c,geo,{
+        dim:dim,
+        stockChim:stockChim,
+        stockCais:stockCais,
+        peutLivrer:peutLivrer,
+        mohDoitProduire:mohDoitProduire,
+        dateTs:dateTs,
+        ageJours:ageJours,
+      });
+    });
+
+    // Séparer : peut livrer vs attend production
+    var peutLivrer=stops.filter(function(s){return s.peutLivrer;});
+    var enAttenteProd=stops.filter(function(s){return !s.peutLivrer;});
+
+    // Grouper par région — seulement les livraisons possibles
+    var regions={};
+    var REGION_ORDER=['Centre','Est','Ouest','Hauts Plateaux'];
+    peutLivrer.forEach(function(s){
+      var r=s.region||'Centre';
+      if(!regions[r]) regions[r]=[];
+      regions[r].push(s);
+    });
+
+    var html='';
+
+    // ═══════ EN-TÊTE RÉSUMÉ ═══════
+    var nbPossible=peutLivrer.length;
+    var nbAttente=enAttenteProd.length;
+
+    html+='<div style="background:rgba(30,30,50,.9);border-radius:12px;padding:12px;margin-bottom:12px;display:flex;gap:8px">'
+      +'<div style="flex:1;text-align:center"><div style="font-size:20px;font-weight:900;color:#27ae60">'+nbPossible+'</div><div style="font-size:10px;color:#888">livrables</div></div>'
+      +'<div style="flex:1;text-align:center"><div style="font-size:20px;font-weight:900;color:#e74c3c">'+nbAttente+'</div><div style="font-size:10px;color:#888">attente stock</div></div>'
+      +'<div style="flex:1;text-align:center"><div style="font-size:20px;font-weight:900;color:#fff">'+stops.length+'</div><div style="font-size:10px;color:#888">total</div></div>'
+    +'</div>';
+
+    // ═══════ COMMANDES EN ATTENTE DE PRODUCTION ═══════
+    if(enAttenteProd.length>0){
+      html+='<div style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);border-radius:12px;padding:10px 12px;margin-bottom:12px">'
+        +'<div style="font-size:12px;font-weight:700;color:#e74c3c;margin-bottom:8px">🔴 '+enAttenteProd.length+' commande(s) — stock insuffisant</div>';
+
+      // WA vers Moh pour urgence production
+      var lignesMoh=enAttenteProd.map(function(s){
+        return '[URGENT] ROSA '+s.dim+' pour '+s.wilaya+' ('+s.ageJours+'j)';
+      }).join('\n');
+      var msgMoh='Salam Moh !\n\nBilel a des livraisons bloquees, akhdem en urgence :\n\n'+lignesMoh+'\n\nMerci !\n- Le Vulcain';
+
+      enAttenteProd.forEach(function(s){
+        var age=s.ageJours;
+        var ageCol=age>3?'#e74c3c':age>1?'#e67e22':'#888';
+        html+='<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+          +'<span style="font-size:16px">⚡</span>'
+          +'<div style="flex:1"><div style="font-size:11px;font-weight:700;color:#fff">ROSA '+s.dim+' — '+h(s.nom)+'</div>'
+            +'<div style="font-size:10px;color:#888">'+h(s.wilaya)+' · stock: '+s.stockChim+' · <span style="color:'+ageCol+'">'+age+'j en attente</span></div>'
+          +'</div>'
+        +'</div>';
+      });
+
+      html+='<a href="'+waLink(WA.moh,msgMoh)+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#e74c3c;color:#fff;text-decoration:none;padding:10px;border-radius:9px;font-weight:700;font-size:12px;margin-top:10px">'
+        +'<span>📲</span>Demander urgence à Moh'
+      +'</a>'
+      +'</div>';
+    }
+
+    // ═══════ AUCUNE LIVRAISON POSSIBLE ═══════
+    if(!nbPossible){
+      html+='<div class="empty">Aucune livraison possible aujourd\'hui — stock insuffisant</div>';
+      showOv('🗺️ Planification tournée', html, function(){}, 'Fermer');
+      return;
+    }
+
+    // ═══════ TOURNÉES PAR RÉGION ═══════
+    var recs=REGION_ORDER.filter(function(r){return regions[r]&&regions[r].length>0;});
+
+    recs.forEach(function(r){
+      var stops_r=regions[r];
+      var col=_regionColor(r);
+      var ico=_regionEmoji(r);
+
+      // Distance max = wilaya la plus éloignée
+      var distMax=Math.max.apply(null,stops_r.map(function(s){return s.dist||100;}));
+      // Temps total = (trajet aller-retour) + (40min/client)
+      var tempsTrajet=Math.round(distMax*2/80*60); // en minutes à 80km/h
+      var tempsAttente=stops_r.length*40;           // 40 min par client
+      var tempsTotal=tempsTrajet+tempsAttente;
+      var heuresTotal=Math.floor(tempsTotal/60);
+      var minsTotal=tempsTotal%60;
+
+      // Heure de départ recommandée pour rentrer avant 20h
+      var heureRetour=20*60; // 20h en minutes
+      var departMinutes=heureRetour-tempsTotal;
+      var departH=Math.floor(departMinutes/60);
+      var departM=departMinutes%60;
+      // Contrainte : min 4h du matin pour extreme
+      if(departH<4) departH=4, departM=0;
+      var departStr=String(departH).padStart(2,'0')+'h'+String(departM).padStart(2,'0');
+
+      // Trier par ancienneté de commande (plus vieux = priorité)
+      var optimized=_optimiserTournee(stops_r);
+      // Appliquer priorité ancienneté sur ordre optimisé (tri stable secondaire)
+      optimized.sort(function(a,b){
+        // D'abord par cluster géo (déjà fait par nearest-neighbor)
+        // Ensuite par ancienneté si même zone
+        var distA=a.dist||0, distB=b.dist||0;
+        if(Math.abs(distA-distB)<30 && a.ageJours!==b.ageJours) return b.ageJours-a.ageJours;
+        return 0;
+      });
+
+      html+='<div style="background:rgba(30,30,50,.8);border:1.5px solid '+col+'40;border-left:4px solid '+col+';border-radius:12px;padding:12px;margin-bottom:10px">'
+
+        // Header région
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+          +'<div style="font-size:13px;font-weight:700;color:'+col+'">'+ico+' Région '+r+'</div>'
+          +'<div style="font-size:10px;color:#888">'+stops_r.length+' livr. · ~'+heuresTotal+'h'+minsTotal+'</div>'
+        +'</div>'
+
+        // Départ recommandé
+        +'<div style="background:rgba(255,255,255,.05);border-radius:8px;padding:8px 10px;margin-bottom:10px;display:flex;align-items:center;gap:8px">'
+          +'<span style="font-size:18px">⏰</span>'
+          +'<div>'
+            +'<div style="font-size:12px;font-weight:700;color:#fff">Départ recommandé : <span style="color:'+col+'">'+departStr+'</span></div>'
+            +'<div style="font-size:10px;color:#888">Trajet: ~'+Math.round(tempsTrajet/60*10)/10+'h · Clients: '+stops_r.length+'×40min · Retour avant 20h</div>'
+          +'</div>'
+        +'</div>'
+
+        // Itinéraire
+        +'<div style="font-size:10px;color:#aaa;margin-bottom:6px;font-weight:600">ITINÉRAIRE OPTIMISÉ</div>'
+        +'<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#555;margin-bottom:4px">'
+          +'<span style="width:18px;height:18px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0">🏠</span>'
+          +'<span>Boumerdès (départ '+departStr+')</span>'
+        +'</div>';
+
+      optimized.forEach(function(s,i){
+        var cod=parseFloat(s.montant)||0;
+        var age=s.ageJours;
+        var ageTag=age>3?'<span style="color:#e74c3c;font-size:9px;font-weight:700"> · '+age+'j !</span>':
+                   age>1?'<span style="color:#e67e22;font-size:9px"> · '+age+'j</span>':'';
+
+        html+='<div style="display:flex;align-items:stretch;gap:6px;margin-bottom:3px">'
+          +'<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">'
+            +'<div style="width:1px;height:6px;background:#333"></div>'
+            +'<div style="width:20px;height:20px;background:'+col+';border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">'+( i+1)+'</div>'
+          +'</div>'
+          +'<div style="flex:1;background:rgba(255,255,255,.04);border-radius:8px;padding:6px 8px">'
+            +'<div style="font-size:11px;font-weight:700;color:#fff">'+h(s.nom)+ageTag+'</div>'
+            +'<div style="font-size:10px;color:#888">'+h(s.wilaya)+(s.commune?' / '+h(s.commune):'')+' · '+h(s.dim?'ROSA '+s.dim:s.variant||s.produit)+' · '+fmt(cod)+' DA</div>'
+            +'<div style="font-size:10px;color:#aaa">📞 '+h(s.tel||'—')+'</div>'
+          +'</div>'
+        +'</div>';
+      });
+
+      html+='<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#555;margin-top:3px;margin-bottom:10px">'
+        +'<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">'
+          +'<div style="width:1px;height:6px;background:#333"></div>'
+          +'<span style="width:18px;height:18px;background:#27ae60;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0">🏠</span>'
+        +'</div>'
+        +'<span style="color:#27ae60;font-weight:600">Retour Boumerdès (~20h)</span>'
+      +'</div>';
+
+      // Bouton Maps
+      var mapsUrl=_mapsUrl(optimized);
+      html+='<a href="'+mapsUrl+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#1a73e8;color:#fff;text-decoration:none;padding:10px;border-radius:9px;font-weight:700;font-size:12px">'
+        +'<span>🗺️</span>Ouvrir sur Google Maps'
+      +'</a>'
+      +'</div>';
+    });
+
+    // Bouton Maps TOUT
+    if(peutLivrer.length>1){
+      var allOpt=_optimiserTournee(peutLivrer);
+      html+='<a href="'+_mapsUrl(allOpt)+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#333;color:#fff;text-decoration:none;padding:12px;border-radius:10px;font-weight:700;font-size:12px;margin-top:4px">'
+        +'<span>🗺️</span>Toutes les livraisons sur Maps'
+      +'</a>';
+    }
+
+    showOv('🗺️ Planification tournée', html, function(){}, 'Fermer');
+  });
+}
+
 function rBilelLiv(div){
   getAPI('commandes_bilel',function(r){
     var all=r.commandes||[];
@@ -1555,7 +1864,8 @@ function rBilelLiv(div){
     });
     var ws=['Toutes'];
     _cmdes.forEach(function(c){if(c.wilaya&&ws.indexOf(c.wilaya)<0)ws.push(c.wilaya);});
-    var html='<select class="inp" id="wfsel" onchange="wFil=this.value;renderBilelList()">';
+    var html='<button onclick="planifierTournee()" style="width:100%;padding:13px;background:linear-gradient(135deg,#1a73e8,#0d47a1);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:18px">🗺️</span>Planifier ma tournée</button>';
+    html+='<select class="inp" id="wfsel" onchange="wFil=this.value;renderBilelList()">';
     ws.forEach(function(w){html+='<option'+(w===wFil?' selected':'')+'>'+h(w)+'</option>';});
     html+='</select><div id="blist"></div>';
     div.innerHTML=html;
