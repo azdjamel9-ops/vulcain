@@ -1182,117 +1182,112 @@ function alerteIntr(){
 // ── MOH COMMANDES (lecture seule - wilaya + produit sans nom ni prix) ──
 function rMohCmdes(div){
   div.innerHTML='<div class="slt">Cheminees a produire</div>'+_skelHtml(5);
-  // Charger commandes + stock intrants pour calcul de priorité
   getAPIs(['commandes_bilel','stock_intrants'],function(_d){
     var rCmdes=_d['commandes_bilel']||{};
-    var rStock=_d['stock_intrants']||{};
-    var intrants=rStock.intrants||[];
+    var intrants=(_d['stock_intrants']||{}).intrants||[];
 
-    // Helper : stock actuel d'un intrant par id
-    function stockActuel(id){
-      var f=intrants.find(function(i){return i.id===id;});
-      return f?(f.actuel||0):999; // 999 = pas encore initialisé → pas d'alerte
-    }
-    function stockMin(id){
-      var f=intrants.find(function(i){return i.id===id;});
-      return f?(f.min||0):0;
-    }
+    function stockActuel(id){var f=intrants.find(function(i){return i.id===id;});return f?(f.actuel||0):999;}
+    function stockMin(id){var f=intrants.find(function(i){return i.id===id;});return f?(f.min||0):0;}
 
-    // Filtrer : cheminées électriques, non livrées par Bilel, non faux/annulé
+    // Filtrer : cheminées élec, non livrées par Bilel, non faux/annulé
     var cmdes=(rCmdes.commandes||[]).filter(function(c){
       var e=String(c.etat||c.statut||'').toUpperCase().trim();
       var sit=String(c.situation||'').toLowerCase();
       var p=String(c.produit||'').toLowerCase().replace(/[^a-z0-9]/g,'');
       if(e.includes('FAUX')||e.includes('ANNUL')) return false;
-      // Exclure livrées par Bilel (situation = livré/retour)
       if(sit.includes('livr')||sit.includes('retour')) return false;
-      var isElec=p.includes('rosa')||p.includes('electr')||p.includes('chim')||p.includes('elect');
-      return isElec;
+      return p.includes('rosa')||p.includes('electr')||p.includes('chim')||p.includes('elect');
     });
 
-    // Pour chaque commande, calculer la priorité selon le stock de la dimension
+    // Enrichir chaque commande avec priorité
     cmdes=cmdes.map(function(c){
       var dimMatch=String(c.variant||c.produit||'').match(/(\d+cm)/i);
       var dim=dimMatch?dimMatch[1]:'';
       var dimNum=dim.replace('cm','');
-      // Stock caisson de cette dimension
       var idCaisson='caisson_'+dimNum;
-      var actuelCaisson=dim?stockActuel(idCaisson):999;
-      var minCaisson=dim?stockMin(idCaisson):0;
-
-      // Priorité :
-      // 1 = URGENT : stock = 0 → doit produire maintenant
-      // 2 = BAS    : stock <= min → bientôt à sec
-      // 3 = CONFIRME : stock OK, commande confirmée
-      // 4 = EN ATTENTE : pas encore confirmée
+      var act=dim?stockActuel(idCaisson):999;
+      var min=dim?stockMin(idCaisson):0;
       var etatUp=String(c.etat||'').toUpperCase();
       var isConf=etatUp.includes('CONFIRM');
-      var priorite;
-      if(dim&&actuelCaisson===0)         priorite=1; // stock épuisé
-      else if(dim&&actuelCaisson<=minCaisson) priorite=2; // stock bas
-      else if(isConf)                    priorite=3; // confirmée, stock OK
-      else                               priorite=4; // en attente
-
-      return Object.assign({},c,{dim:dim,dimNum:dimNum,actuelCaisson:actuelCaisson,minCaisson:minCaisson,priorite:priorite});
+      var prio = dim&&act===0?1 : dim&&act<=min?2 : isConf?3 : 4;
+      return Object.assign({},c,{dim:dim,dimNum:dimNum,act:act,min:min,prio:prio});
     });
 
-    // Trier par priorité puis par date
-    cmdes.sort(function(a,b){
-      if(a.priorite!==b.priorite) return a.priorite-b.priorite;
-      return 0;
+    cmdes.sort(function(a,b){return a.prio!==b.prio?a.prio-b.prio:0;});
+
+    if(!cmdes.length){div.innerHTML='<div class="empty">Aucune cheminee a produire</div>';return;}
+
+    // ═══════════════════════════════════════
+    // PARTIE 1 — RÉSUMÉ PAR DIMENSION
+    // ═══════════════════════════════════════
+    // Grouper par dimension
+    var dims={};
+    cmdes.forEach(function(c){
+      var k=c.dim||'Autre';
+      if(!dims[k]) dims[k]={dim:k,total:0,conf:0,attente:0,act:c.act,min:c.min,prio:c.prio};
+      dims[k].total++;
+      if(c.prio<=2) dims[k].prio=Math.min(dims[k].prio,c.prio); // prio la plus haute
+      if(String(c.etat||'').toUpperCase().includes('CONFIRM')) dims[k].conf++;
+      else dims[k].attente++;
     });
 
-    // Afficher
+    // Trier les dimensions par priorité
+    var dimList=Object.values(dims).sort(function(a,b){
+      if(a.prio!==b.prio) return a.prio-b.prio;
+      return b.total-a.total; // plus de commandes = avant
+    });
+
     var html='';
 
-    if(!cmdes.length){
-      html='<div class="empty">Aucune cheminee a produire</div>';
-      div.innerHTML=html; return;
-    }
-
-    // Compteurs par priorité
-    var nb1=cmdes.filter(function(c){return c.priorite===1;}).length;
-    var nb2=cmdes.filter(function(c){return c.priorite===2;}).length;
-    var nb3=cmdes.filter(function(c){return c.priorite===3;}).length;
-    var nb4=cmdes.filter(function(c){return c.priorite===4;}).length;
-
-    // Résumé en haut
-    if(nb1>0||nb2>0){
+    // Bannière alerte si urgent
+    var nbUrgent=cmdes.filter(function(c){return c.prio===1;}).length;
+    var nbBas=cmdes.filter(function(c){return c.prio===2;}).length;
+    if(nbUrgent>0||nbBas>0){
       html+='<div style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);border-radius:12px;padding:10px 12px;margin-bottom:10px">';
-      if(nb1>0) html+='<div style="font-size:12px;font-weight:700;color:var(--r)">🔴 '+nb1+' commande(s) — STOCK EPUISE — produire en priorité !</div>';
-      if(nb2>0) html+='<div style="font-size:12px;font-weight:700;color:var(--o);margin-top:4px">🟠 '+nb2+' commande(s) — stock bas</div>';
+      if(nbUrgent>0) html+='<div style="font-size:12px;font-weight:700;color:var(--r)">🔴 '+nbUrgent+' commande(s) — STOCK EPUISE — produire maintenant !</div>';
+      if(nbBas>0)    html+='<div style="font-size:12px;font-weight:700;color:var(--o);margin-top:4px">🟠 '+nbBas+' commande(s) — stock bas</div>';
       html+='</div>';
     }
 
-    html+='<div class="slt">A produire ('+cmdes.length+')</div>';
+    // Tableau récapitulatif par dimension
+    html+='<div class="slt">Résumé par dimension</div>';
+    html+='<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">';
+    dimList.forEach(function(d){
+      var col=d.prio===1?'var(--r)':d.prio===2?'var(--o)':d.prio===3?'var(--g)':'#666';
+      var bg =d.prio===1?'rgba(231,76,60,.1)':d.prio===2?'rgba(243,156,18,.08)':d.prio===3?'rgba(39,174,96,.08)':'rgba(30,30,50,.5)';
+      var bdr=d.prio===1?'rgba(231,76,60,.4)':d.prio===2?'rgba(243,156,18,.3)':d.prio===3?'rgba(39,174,96,.25)':'rgba(80,80,120,.3)';
+      var ico=d.prio===1?'🔴':d.prio===2?'🟠':d.prio===3?'✅':'⏳';
+      var stockTxt=d.act<999?(' · Stock: <b style="color:'+col+'">'+d.act+'</b>'+(d.min>0?'/'+d.min+' min':'')):' · Stock non init.';
+      html+='<div style="background:'+bg+';border:1px solid '+bdr+';border-left:4px solid '+col+';border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between">'
+        +'<div>'
+          +'<span style="font-size:14px;font-weight:700;color:#fff">'+ico+' ROSA '+d.dim+'</span>'
+          +'<div style="font-size:10px;color:#999;margin-top:2px">'+d.conf+' confirmée(s) · '+d.attente+' en attente'+stockTxt+'</div>'
+        +'</div>'
+        +'<div style="background:'+col+';color:#fff;font-size:22px;font-weight:900;padding:6px 14px;border-radius:8px;min-width:36px;text-align:center">'+d.total+'</div>'
+      +'</div>';
+    });
+    html+='</div>';
 
+    // ═══════════════════════════════════════
+    // PARTIE 2 — LISTE DÉTAILLÉE
+    // ═══════════════════════════════════════
+    html+='<div class="slt">Detail commandes ('+cmdes.length+')</div>';
     cmdes.forEach(function(c){
       var prodLabel=c.dim?'⚡ ROSA '+c.dim:h(c.variant||c.produit);
-
-      // Couleur et badge selon priorité
       var borderCol,badgeTxt,badgeCls,stockInfo='';
-      if(c.priorite===1){
-        borderCol='rgba(231,76,60,.6)';
-        badgeTxt='🔴 STOCK 0';
-        badgeCls='br';
-        stockInfo='Stock caisson '+c.dim+' : <b style="color:var(--r)">0</b>';
-      } else if(c.priorite===2){
-        borderCol='rgba(243,156,18,.5)';
-        badgeTxt='🟠 Stock bas';
-        badgeCls='bo';
-        stockInfo='Stock caisson '+c.dim+' : <b style="color:var(--o)">'+c.actuelCaisson+'</b>/'+c.minCaisson+' min';
-      } else if(c.priorite===3){
-        borderCol='rgba(39,174,96,.3)';
-        badgeTxt='✅ Confirmée';
-        badgeCls='bg';
-        stockInfo=c.dim&&c.actuelCaisson<999?'Stock : '+c.actuelCaisson:'';
+      if(c.prio===1){
+        borderCol='rgba(231,76,60,.6)';badgeTxt='🔴 STOCK 0';badgeCls='br';
+        stockInfo='Stock: <b style="color:var(--r)">0</b>';
+      } else if(c.prio===2){
+        borderCol='rgba(243,156,18,.5)';badgeTxt='🟠 Stock bas';badgeCls='bo';
+        stockInfo='Stock: <b style="color:var(--o)">'+c.act+'</b>/'+c.min+' min';
+      } else if(c.prio===3){
+        borderCol='rgba(39,174,96,.3)';badgeTxt='✅ Confirmée';badgeCls='bg';
+        stockInfo=c.act<999?'Stock: '+c.act:'';
       } else {
-        borderCol='rgba(136,136,136,.2)';
-        badgeTxt='⏳ En attente';
-        badgeCls='';
-        stockInfo=c.dim&&c.actuelCaisson<999?'Stock : '+c.actuelCaisson:'';
+        borderCol='rgba(136,136,136,.2)';badgeTxt='⏳ En attente';badgeCls='';
+        stockInfo=c.act<999?'Stock: '+c.act:'';
       }
-
       html+='<div class="li" style="border-left:3px solid '+borderCol+'">'
         +'<div class="li-row">'
           +'<div style="flex:1">'
@@ -1300,7 +1295,7 @@ function rMohCmdes(div){
             +'<div class="li-sb">📍 '+h(c.wilaya||'—')+' · 📅 '+h(c.date||'—')+'</div>'
             +(stockInfo?'<div class="li-sb" style="font-size:10px;margin-top:2px">'+stockInfo+'</div>':'')
           +'</div>'
-          +'<div class="bdg'+(badgeCls?' '+badgeCls:'')+'">'+badgeTxt+'</div>'
+          +'<div class="bdg'+(badgeCls?' '+badgeCls:'')+'" style="white-space:nowrap">'+badgeTxt+'</div>'
         +'</div>'
       +'</div>';
     });
@@ -1308,6 +1303,7 @@ function rMohCmdes(div){
     div.innerHTML=html;
   });
 }
+
 // ── MOH COMPTE ──
 
 function rMohStockElec(div){
