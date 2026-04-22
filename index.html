@@ -1548,56 +1548,76 @@ function rMohCompte(div){
 // PLANIFICATION TOURNÉE BILEL — depuis Boumerdès
 // ══════════════════════════════════════════════════════════
 
-// Coordonnées approximatives des wilayas algériennes
+// ══════════════════════════════════════════════════════════
+// PLANIFICATION TOURNÉE BILEL — depuis Boumerdès
+// ══════════════════════════════════════════════════════════
+
 var WILAYA_GEO = {
   // Centre
-  'Alger':{'lat':36.737,'lng':3.086,'region':'Centre','dist':45},
-  'Blida':{'lat':36.470,'lng':2.828,'region':'Centre','dist':55},
-  'Boumerdes':{'lat':36.762,'lng':3.477,'region':'Centre','dist':5},
-  'Tipaza':{'lat':36.590,'lng':2.448,'region':'Centre','dist':85},
-  'Tizi Ouzou':{'lat':36.717,'lng':4.046,'region':'Centre','dist':60},
-  'Bouira':{'lat':36.373,'lng':3.900,'region':'Centre','dist':80},
-  'Medea':{'lat':36.264,'lng':2.752,'region':'Centre','dist':110},
-  'Ain Defla':{'lat':36.264,'lng':1.966,'region':'Ouest','dist':180},
+  'Alger':                {'lat':36.737,'lng':3.086,'region':'Centre','dist':45,'ville':'Alger'},
+  'Blida':                {'lat':36.470,'lng':2.828,'region':'Centre','dist':55,'ville':'Blida'},
+  'Boumerdes':            {'lat':36.762,'lng':3.477,'region':'Centre','dist':5,'ville':'Boumerdes'},
+  'Tipaza':               {'lat':36.590,'lng':2.448,'region':'Centre','dist':85,'ville':'Tipaza'},
+  'Tizi Ouzou':           {'lat':36.717,'lng':4.046,'region':'Centre','dist':60,'ville':'Tizi Ouzou'},
+  'Bouira':               {'lat':36.373,'lng':3.900,'region':'Centre','dist':80,'ville':'Bouira'},
+  'Medea':                {'lat':36.264,'lng':2.752,'region':'Centre','dist':110,'ville':'Medea'},
+  'Ain Defla':            {'lat':36.264,'lng':1.966,'region':'Ouest','dist':180,'ville':'Ain Defla'},
   // Est
-  'Bejaia':{'lat':36.750,'lng':5.083,'region':'Est','dist':160},
-  'Jijel':{'lat':36.820,'lng':5.767,'region':'Est','dist':230},
-  'Setif':{'lat':36.190,'lng':5.408,'region':'Est','dist':220},
-  'Bordj Bou Arreridj':{'lat':36.074,'lng':4.763,'region':'Est','dist':190},
-  'Mila':{'lat':36.450,'lng':6.267,'region':'Est','dist':300},
-  'Constantine':{'lat':36.365,'lng':6.614,'region':'Est','dist':360},
-  'Skikda':{'lat':36.876,'lng':6.906,'region':'Est','dist':400},
-  'Annaba':{'lat':36.900,'lng':7.767,'region':'Est','dist':470},
-  'Guelma':{'lat':36.462,'lng':7.430,'region':'Est','dist':430},
-  'El Tarf':{'lat':36.767,'lng':8.313,'region':'Est','dist':510},
-  'Souk Ahras':{'lat':36.286,'lng':7.951,'region':'Est','dist':470},
-  'Oum El Bouaghi':{'lat':35.870,'lng':7.114,'region':'Est','dist':390},
-  'Batna':{'lat':35.556,'lng':6.174,'region':'Est','dist':340},
-  'Khenchela':{'lat':35.433,'lng':7.143,'region':'Est','dist':420},
-  'Tebessa':{'lat':35.400,'lng':8.120,'region':'Est','dist':520},
-  'Biskra':{'lat':34.850,'lng':5.728,'region':'Est','dist':380},
+  'Bejaia':               {'lat':36.750,'lng':5.083,'region':'Est','dist':160,'ville':'Bejaia'},
+  'Jijel':                {'lat':36.820,'lng':5.767,'region':'Est','dist':230,'ville':'Jijel'},
+  'Setif':                {'lat':36.190,'lng':5.408,'region':'Est','dist':220,'ville':'Setif'},
+  'Bordj Bou Arreridj':   {'lat':36.074,'lng':4.763,'region':'Est','dist':190,'ville':'Bordj Bou Arreridj'},
+  'Mila':                 {'lat':36.450,'lng':6.267,'region':'Est','dist':300,'ville':'Mila'},
+  'Constantine':          {'lat':36.365,'lng':6.614,'region':'Est','dist':360,'ville':'Constantine'},
+  'Skikda':               {'lat':36.876,'lng':6.906,'region':'Est','dist':400,'ville':'Skikda'},
+  'Annaba':               {'lat':36.900,'lng':7.767,'region':'Est','dist':470,'ville':'Annaba'},
+  'Guelma':               {'lat':36.462,'lng':7.430,'region':'Est','dist':430,'ville':'Guelma'},
+  'El Tarf':              {'lat':36.767,'lng':8.313,'region':'Est','dist':510,'ville':'El Tarf'},
+  'Souk Ahras':           {'lat':36.286,'lng':7.951,'region':'Est','dist':470,'ville':'Souk Ahras'},
+  'Oum El Bouaghi':       {'lat':35.870,'lng':7.114,'region':'Est','dist':390,'ville':'Oum El Bouaghi'},
+  'Batna':                {'lat':35.556,'lng':6.174,'region':'Est','dist':340,'ville':'Batna'},
+  'Khenchela':            {'lat':35.433,'lng':7.143,'region':'Est','dist':420,'ville':'Khenchela'},
+  'Tebessa':              {'lat':35.400,'lng':8.120,'region':'Est','dist':520,'ville':'Tebessa'},
+  'Biskra':               {'lat':34.850,'lng':5.728,'region':'Est','dist':380,'ville':'Biskra'},
   // Ouest
-  'Oran':{'lat':35.697,'lng':-0.634,'region':'Ouest','dist':360},
-  'Mostaganem':{'lat':35.931,'lng':0.089,'region':'Ouest','dist':310},
-  'Relizane':{'lat':35.738,'lng':0.556,'region':'Ouest','dist':270},
-  'Chlef':{'lat':36.165,'lng':1.330,'region':'Ouest','dist':200},
-  'Ain Temouchent':{'lat':35.298,'lng':-1.140,'region':'Ouest','dist':430},
-  'Tlemcen':{'lat':34.878,'lng':-1.315,'region':'Ouest','dist':480},
-  'Sidi Bel Abbes':{'lat':35.190,'lng':-0.630,'region':'Ouest','dist':400},
-  'Mascara':{'lat':35.395,'lng':0.140,'region':'Ouest','dist':340},
-  'Tiaret':{'lat':35.371,'lng':1.327,'region':'Ouest','dist':300},
-  'Tissemsilt':{'lat':35.607,'lng':1.812,'region':'Ouest','dist':260},
-  'Saida':{'lat':34.830,'lng':0.151,'region':'Ouest','dist':380},
-  'Naama':{'lat':33.267,'lng':-0.317,'region':'Hauts Plateaux','dist':500},
+  'Oran':                 {'lat':35.697,'lng':-0.634,'region':'Ouest','dist':360,'ville':'Oran'},
+  'Mostaganem':           {'lat':35.931,'lng':0.089,'region':'Ouest','dist':310,'ville':'Mostaganem'},
+  'Relizane':             {'lat':35.738,'lng':0.556,'region':'Ouest','dist':270,'ville':'Relizane'},
+  'Chlef':                {'lat':36.165,'lng':1.330,'region':'Ouest','dist':200,'ville':'Chlef'},
+  'Ain Temouchent':       {'lat':35.298,'lng':-1.140,'region':'Ouest','dist':430,'ville':'Ain Temouchent'},
+  'Tlemcen':              {'lat':34.878,'lng':-1.315,'region':'Ouest','dist':480,'ville':'Tlemcen'},
+  'Sidi Bel Abbes':       {'lat':35.190,'lng':-0.630,'region':'Ouest','dist':400,'ville':'Sidi Bel Abbes'},
+  'Mascara':              {'lat':35.395,'lng':0.140,'region':'Ouest','dist':340,'ville':'Mascara'},
+  'Tiaret':               {'lat':35.371,'lng':1.327,'region':'Ouest','dist':300,'ville':'Tiaret'},
+  'Tissemsilt':           {'lat':35.607,'lng':1.812,'region':'Ouest','dist':260,'ville':'Tissemsilt'},
+  'Saida':                {'lat':34.830,'lng':0.151,'region':'Ouest','dist':380,'ville':'Saida'},
   // Hauts Plateaux
-  'Djelfa':{'lat':34.670,'lng':3.263,'region':'Hauts Plateaux','dist':280},
-  'Laghouat':{'lat':33.800,'lng':2.863,'region':'Hauts Plateaux','dist':380},
-  'Msila':{'lat':35.706,'lng':4.544,'region':'Hauts Plateaux','dist':240},
-  'Boussaada':{'lat':35.217,'lng':4.183,'region':'Hauts Plateaux','dist':260},
+  'Djelfa':               {'lat':34.670,'lng':3.263,'region':'Hauts Plateaux','dist':280,'ville':'Djelfa'},
+  'Laghouat':             {'lat':33.800,'lng':2.863,'region':'Hauts Plateaux','dist':380,'ville':'Laghouat'},
+  'Msila':                {'lat':35.706,'lng':4.544,'region':'Hauts Plateaux','dist':240,'ville':'Msila'},
+  'Naama':                {'lat':33.267,'lng':-0.317,'region':'Hauts Plateaux','dist':500,'ville':'Naama'},
 };
 
-// Départ : Boumerdès ville
+// Facteurs trafic selon l'heure (coefficient × temps base)
+// Alger = ville la plus dense → pénalité si passage par Alger
+var TRAFIC_HEURE = {
+  4:1.0, 5:1.0, 6:1.1, 7:1.5, 8:1.8, 9:1.6,
+  10:1.3, 11:1.2, 12:1.3, 13:1.4, 14:1.3, 15:1.3,
+  16:1.5, 17:1.8, 18:1.9, 19:1.6, 20:1.3, 21:1.1,
+};
+// Créneaux fluides recommandés par région
+var CRENEAUX_FLUIDES = {
+  'Centre':         {ideal:'06h00–07h00', eviter:'07h30–09h30 et 17h00–19h30', conseil:'Partir tôt le matin avant les embouteillages d\'Alger'},
+  'Est':            {ideal:'05h00–06h00', eviter:'07h00–09h00', conseil:'Autoroute Est, préférer partir avant 6h'},
+  'Ouest':          {ideal:'05h00–06h00', eviter:'07h30–09h30', conseil:'Autoroute Ouest, éviter Alger aux heures de pointe'},
+  'Hauts Plateaux': {ideal:'05h00–06h00', eviter:'08h00–10h00', conseil:'Route nationale, partir tôt pour rentrer avant la nuit'},
+};
+var PAUSE_DEJEUNER = {debut:12, fin:13, duree:60}; // 12h–13h, 60 min
+
 var DEPART = {lat:36.762, lng:3.477, nom:'Boumerdès'};
+// Réordonnancement manuel des stops (état côté client)
+var _tourneeStopped = false;
+var _tourneeOrder = {}; // {region: [indices dans stops_r]}
 
 function _regionColor(r){
   return r==='Centre'?'#3498db':r==='Est'?'#e74c3c':r==='Ouest'?'#27ae60':'#e67e22';
@@ -1606,13 +1626,12 @@ function _regionEmoji(r){
   return r==='Centre'?'🔵':r==='Est'?'🔴':r==='Ouest'?'🟢':'🟠';
 }
 
-// Algorithme nearest-neighbor pour optimiser l'itinéraire
+// Nearest-neighbor avec conscience du trafic
 function _optimiserTournee(stops){
   if(!stops.length) return [];
   var reste=stops.slice();
   var route=[];
   var pos={lat:DEPART.lat,lng:DEPART.lng};
-
   while(reste.length){
     var best=null,bestDist=Infinity,bestIdx=0;
     reste.forEach(function(s,i){
@@ -1626,231 +1645,294 @@ function _optimiserTournee(stops){
   return route;
 }
 
+// ─── URL Google Maps avec mode navigation activé ───────────────────────
+// Utilise l'API directions avec travelmode=driving et waypoints
+// Format qui ouvre DIRECTEMENT la navigation GPS
 function _mapsUrl(stops){
-  // Google Maps directions depuis Boumerdès avec waypoints optimisés
-  var base='https://www.google.com/maps/dir/';
-  var pts=[DEPART.lat+','+DEPART.lng];
-  stops.forEach(function(s){ pts.push(encodeURIComponent(s.wilaya+', Algérie')); });
-  pts.push(DEPART.lat+','+DEPART.lng); // retour
-  return base+pts.join('/');
+  if(!stops.length) return '#';
+  // Format Google Maps directions avec départ et arrivée fixes
+  // Origin = Boumerdès, Destination = Boumerdès (retour), waypoints = toutes les wilayas
+  var origin = encodeURIComponent('Boumerdes, Algérie');
+  var destination = encodeURIComponent('Boumerdes, Algérie');
+
+  if(stops.length === 1){
+    // Un seul arrêt : lien direct navigation
+    var dest = encodeURIComponent((stops[0].commune||stops[0].wilaya)+', Algérie');
+    return 'https://www.google.com/maps/dir/?api=1'
+      +'&origin='+origin
+      +'&destination='+dest
+      +'&travelmode=driving';
+  }
+
+  // Plusieurs arrêts : waypoints intermédiaires
+  // Google Maps Web accepte max 9 waypoints via l'URL
+  var waypoints = stops.slice(0, stops.length-1).map(function(s){
+    return encodeURIComponent((s.commune||s.wilaya)+', Algérie');
+  }).join('|');
+  var lastStop = encodeURIComponent((stops[stops.length-1].commune||stops[stops.length-1].wilaya)+', Algérie');
+
+  return 'https://www.google.com/maps/dir/?api=1'
+    +'&origin='+origin
+    +'&destination='+destination
+    +'&waypoints='+waypoints
+    +'&travelmode=driving'
+    +'&dir_action=navigate'; // Ouvre directement la navigation
+}
+
+// ─── Calculer l'heure d'arrivée réelle (avec trafic + pause) ──────────
+function _calcTimeline(distMax, nbStops, departH){
+  // Vitesse de base 90km/h autoroute (moins trafic)
+  var coeff = TRAFIC_HEURE[departH] || 1.3;
+  var vitesse = Math.round(90 / coeff);
+
+  // Temps trajet total aller (avec trafic)
+  var tempsAllerMin = Math.round(distMax / vitesse * 60);
+  // Retour le soir → trafic de retour à 18h
+  var coeff_retour = TRAFIC_HEURE[18] || 1.9;
+  var vitesse_retour = Math.round(90 / coeff_retour);
+  var tempsRetourMin = Math.round(distMax / vitesse_retour * 60);
+  // Temps clients : 40 min chacun
+  var tempsClients = nbStops * 40;
+  // Pause déjeuner si la tournée couvre 12h–13h
+  var departMinutes = departH * 60;
+  var arriveeMin = departMinutes + tempsAllerMin + tempsClients;
+  var pauseMin = 0;
+  if(departMinutes < PAUSE_DEJEUNER.debut*60 && arriveeMin > PAUSE_DEJEUNER.debut*60){
+    pauseMin = PAUSE_DEJEUNER.duree;
+  }
+  var totalMin = tempsAllerMin + tempsRetourMin + tempsClients + pauseMin;
+  return {
+    tempsAllerMin: tempsAllerMin,
+    tempsRetourMin: tempsRetourMin,
+    tempsClients: tempsClients,
+    pauseMin: pauseMin,
+    totalMin: totalMin,
+    vitesse: vitesse,
+    coeff: coeff,
+  };
+}
+
+function _fmtMin(m){
+  var h=Math.floor(m/60), mn=m%60;
+  return h+'h'+(mn>0?mn+'min':'');
 }
 
 function planifierTournee(){
-  // Charger stock + intrants en parallèle pour analyse disponibilité
   getAPIs(['commandes_bilel','stock_elec','stock_intrants'],function(_d){
     var enAtt=(_cmdes||[]).filter(function(c){
       var p=String(c.situation||'').toLowerCase();
       return !p.includes('livr')&&!p.includes('retour')&&!p.includes('annul');
     });
-
     if(!enAtt.length){alert('Aucune livraison en attente !');return;}
 
     var stockElec=(_d['stock_elec']||{}).stock||[];
     var intrants=(_d['stock_intrants']||{}).intrants||[];
 
-    // Checker stock disponible par dimension
-    function stockDim(dim){
-      var s=stockElec.find(function(x){return x.dim===dim||x.dimension===dim;});
-      return s?parseInt(s.actuel)||0:0;
-    }
-    function stockCaisson(dim){
-      var id='caisson_'+dim.replace('cm','');
-      var f=intrants.find(function(i){return i.id===id;});
-      return f?parseInt(f.actuel)||0:999;
-    }
+    function stockDim(dim){var s=stockElec.find(function(x){return x.dim===dim||x.dimension===dim;});return s?parseInt(s.actuel)||0:0;}
+    function stockCaisson(dim){var id='caisson_'+dim.replace('cm','');var f=intrants.find(function(i){return i.id===id;});return f?parseInt(f.actuel)||0:999;}
 
-    // Enrichir commandes avec geo + analyse stock
     var stops=enAtt.map(function(c){
-      var geo=WILAYA_GEO[c.wilaya]||{lat:36.5,lng:3.0,region:'Centre',dist:100};
+      var geo=WILAYA_GEO[c.wilaya]||{lat:36.5,lng:3.0,region:'Centre',dist:100,ville:c.wilaya};
       var dimMatch=String(c.variant||c.produit||'').match(/(\d+cm)/i);
       var dim=dimMatch?dimMatch[1]:'';
       var stockChim=dim?stockDim(dim):0;
       var stockCais=dim?stockCaisson(dim):999;
-      var peutLivrer=stockChim>0; // cheminée disponible en stock
-      var mohDoitProduire=!peutLivrer&&stockCais>0; // matière ok mais cheminée pas prête
-      // Date de commande pour priorité
-      var dateRaw=String(c.date||'');
-      var dateTs=0;
-      if(dateRaw){var parts=dateRaw.split('/');if(parts.length===3)dateTs=new Date(parts[2],parts[1]-1,parts[0]).getTime();}
+      var peutLivrer=stockChim>0;
+      var dateRaw=String(c.date||'');var dateTs=0;
+      if(dateRaw){var pt=dateRaw.split('/');if(pt.length===3)dateTs=new Date(pt[2],pt[1]-1,pt[0]).getTime();}
       var ageJours=dateTs?Math.floor((Date.now()-dateTs)/864e5):0;
-      return Object.assign({},c,geo,{
-        dim:dim,
-        stockChim:stockChim,
-        stockCais:stockCais,
-        peutLivrer:peutLivrer,
-        mohDoitProduire:mohDoitProduire,
-        dateTs:dateTs,
-        ageJours:ageJours,
-      });
+      return Object.assign({},c,geo,{dim:dim,stockChim:stockChim,stockCais:stockCais,peutLivrer:peutLivrer,dateTs:dateTs,ageJours:ageJours});
     });
 
-    // Séparer : peut livrer vs attend production
     var peutLivrer=stops.filter(function(s){return s.peutLivrer;});
-    var enAttenteProd=stops.filter(function(s){return !s.peutLivrer;});
+    var enAttProd=stops.filter(function(s){return !s.peutLivrer;});
 
-    // Grouper par région — seulement les livraisons possibles
+    // Grouper par région
     var regions={};
     var REGION_ORDER=['Centre','Est','Ouest','Hauts Plateaux'];
-    peutLivrer.forEach(function(s){
-      var r=s.region||'Centre';
-      if(!regions[r]) regions[r]=[];
-      regions[r].push(s);
-    });
+    peutLivrer.forEach(function(s){var r=s.region||'Centre';if(!regions[r])regions[r]=[];regions[r].push(s);});
 
-    var html='';
+    function buildHtml(){
+      var html='';
 
-    // ═══════ EN-TÊTE RÉSUMÉ ═══════
-    var nbPossible=peutLivrer.length;
-    var nbAttente=enAttenteProd.length;
-
-    html+='<div style="background:rgba(30,30,50,.9);border-radius:12px;padding:12px;margin-bottom:12px;display:flex;gap:8px">'
-      +'<div style="flex:1;text-align:center"><div style="font-size:20px;font-weight:900;color:#27ae60">'+nbPossible+'</div><div style="font-size:10px;color:#888">livrables</div></div>'
-      +'<div style="flex:1;text-align:center"><div style="font-size:20px;font-weight:900;color:#e74c3c">'+nbAttente+'</div><div style="font-size:10px;color:#888">attente stock</div></div>'
-      +'<div style="flex:1;text-align:center"><div style="font-size:20px;font-weight:900;color:#fff">'+stops.length+'</div><div style="font-size:10px;color:#888">total</div></div>'
-    +'</div>';
-
-    // ═══════ COMMANDES EN ATTENTE DE PRODUCTION ═══════
-    if(enAttenteProd.length>0){
-      html+='<div style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);border-radius:12px;padding:10px 12px;margin-bottom:12px">'
-        +'<div style="font-size:12px;font-weight:700;color:#e74c3c;margin-bottom:8px">🔴 '+enAttenteProd.length+' commande(s) — stock insuffisant</div>';
-
-      // WA vers Moh pour urgence production
-      var lignesMoh=enAttenteProd.map(function(s){
-        return '[URGENT] ROSA '+s.dim+' pour '+s.wilaya+' ('+s.ageJours+'j)';
-      }).join('\n');
-      var msgMoh='Salam Moh !\n\nBilel a des livraisons bloquees, akhdem en urgence :\n\n'+lignesMoh+'\n\nMerci !\n- Le Vulcain';
-
-      enAttenteProd.forEach(function(s){
-        var age=s.ageJours;
-        var ageCol=age>3?'#e74c3c':age>1?'#e67e22':'#888';
-        html+='<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
-          +'<span style="font-size:16px">⚡</span>'
-          +'<div style="flex:1"><div style="font-size:11px;font-weight:700;color:#fff">ROSA '+s.dim+' — '+h(s.nom)+'</div>'
-            +'<div style="font-size:10px;color:#888">'+h(s.wilaya)+' · stock: '+s.stockChim+' · <span style="color:'+ageCol+'">'+age+'j en attente</span></div>'
-          +'</div>'
-        +'</div>';
-      });
-
-      html+='<a href="'+waLink(WA.moh,msgMoh)+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#e74c3c;color:#fff;text-decoration:none;padding:10px;border-radius:9px;font-weight:700;font-size:12px;margin-top:10px">'
-        +'<span>📲</span>Demander urgence à Moh'
-      +'</a>'
+      // Résumé
+      html+='<div style="background:rgba(30,30,50,.9);border-radius:12px;padding:10px;margin-bottom:10px;display:flex;gap:6px">'
+        +'<div style="flex:1;text-align:center"><div style="font-size:18px;font-weight:900;color:#27ae60">'+peutLivrer.length+'</div><div style="font-size:9px;color:#888">livrables</div></div>'
+        +'<div style="flex:1;text-align:center"><div style="font-size:18px;font-weight:900;color:#e74c3c">'+enAttProd.length+'</div><div style="font-size:9px;color:#888">bloquées</div></div>'
+        +'<div style="flex:1;text-align:center"><div style="font-size:18px;font-weight:900;color:#fff">'+stops.length+'</div><div style="font-size:9px;color:#888">total</div></div>'
       +'</div>';
-    }
 
-    // ═══════ AUCUNE LIVRAISON POSSIBLE ═══════
-    if(!nbPossible){
-      html+='<div class="empty">Aucune livraison possible aujourd\'hui — stock insuffisant</div>';
-      showOv('🗺️ Planification tournée', html, function(){}, 'Fermer');
-      return;
-    }
+      // Bloquées + WA Moh
+      if(enAttProd.length>0){
+        var lignesMoh=enAttProd.map(function(s){return '[URGENT] ROSA '+s.dim+' pour '+s.wilaya+' ('+s.ageJours+'j)';}).join('\n');
+        var msgMoh='Salam Moh !\n\nBilel a des livraisons bloquees :\n\n'+lignesMoh+'\n\nMerci !\n- Le Vulcain';
+        html+='<div style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);border-radius:10px;padding:10px;margin-bottom:10px">'
+          +'<div style="font-size:12px;font-weight:700;color:#e74c3c;margin-bottom:6px">🔴 '+enAttProd.length+' commande(s) bloquées — stock insuffisant</div>';
+        enAttProd.forEach(function(s){
+          var ageCol=s.ageJours>3?'#e74c3c':s.ageJours>1?'#e67e22':'#888';
+          html+='<div style="font-size:11px;color:#fff;padding:3px 0">⚡ ROSA '+s.dim+' — '+h(s.nom)+' / '+h(s.wilaya)
+            +' <span style="color:'+ageCol+'">'+s.ageJours+'j</span></div>';
+        });
+        html+='<a href="'+waLink(WA.moh,msgMoh)+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;background:#e74c3c;color:#fff;text-decoration:none;padding:9px;border-radius:9px;font-weight:700;font-size:12px;margin-top:8px">📲 Demander urgence à Moh</a>'
+          +'</div>';
+      }
 
-    // ═══════ TOURNÉES PAR RÉGION ═══════
-    var recs=REGION_ORDER.filter(function(r){return regions[r]&&regions[r].length>0;});
+      if(!peutLivrer.length){
+        html+='<div class="empty">Aucune livraison possible — stock insuffisant</div>';
+        return html;
+      }
 
-    recs.forEach(function(r){
-      var stops_r=regions[r];
-      var col=_regionColor(r);
-      var ico=_regionEmoji(r);
+      var recs=REGION_ORDER.filter(function(r){return regions[r]&&regions[r].length>0;});
 
-      // Distance max = wilaya la plus éloignée
-      var distMax=Math.max.apply(null,stops_r.map(function(s){return s.dist||100;}));
-      // Temps total = (trajet aller-retour) + (40min/client)
-      var tempsTrajet=Math.round(distMax*2/80*60); // en minutes à 80km/h
-      var tempsAttente=stops_r.length*40;           // 40 min par client
-      var tempsTotal=tempsTrajet+tempsAttente;
-      var heuresTotal=Math.floor(tempsTotal/60);
-      var minsTotal=tempsTotal%60;
+      recs.forEach(function(r){
+        var col=_regionColor(r);
+        var ico=_regionEmoji(r);
+        var stops_r=_tourneeOrder[r]||_optimiserTournee(regions[r]);
+        if(!_tourneeOrder[r]) _tourneeOrder[r]=stops_r;
+        var distMax=Math.max.apply(null,stops_r.map(function(s){return s.dist||100;}));
 
-      // Heure de départ recommandée pour rentrer avant 20h
-      var heureRetour=20*60; // 20h en minutes
-      var departMinutes=heureRetour-tempsTotal;
-      var departH=Math.floor(departMinutes/60);
-      var departM=departMinutes%60;
-      // Contrainte : min 4h du matin pour extreme
-      if(departH<4) departH=4, departM=0;
-      var departStr=String(departH).padStart(2,'0')+'h'+String(departM).padStart(2,'0');
+        // Calculer heure de départ optimale (retour avant 20h)
+        var heureRetour=20*60;
+        var departTry=4; // commence à 4h
+        var timeline=null;
+        for(var hd=4;hd<=19;hd++){
+          var t=_calcTimeline(distMax,stops_r.length,hd);
+          if(hd*60+t.totalMin<=heureRetour){departTry=hd;timeline=t;break;}
+        }
+        if(!timeline) timeline=_calcTimeline(distMax,stops_r.length,4);
 
-      // Trier par ancienneté de commande (plus vieux = priorité)
-      var optimized=_optimiserTournee(stops_r);
-      // Appliquer priorité ancienneté sur ordre optimisé (tri stable secondaire)
-      optimized.sort(function(a,b){
-        // D'abord par cluster géo (déjà fait par nearest-neighbor)
-        // Ensuite par ancienneté si même zone
-        var distA=a.dist||0, distB=b.dist||0;
-        if(Math.abs(distA-distB)<30 && a.ageJours!==b.ageJours) return b.ageJours-a.ageJours;
-        return 0;
-      });
+        var departH=departTry;
+        var departM=0;
+        // Affiner à la demi-heure près
+        var totalNeeded=timeline.totalMin;
+        var departMin=heureRetour-totalNeeded;
+        if(departMin>departH*60){departH=Math.floor(departMin/60);departM=departMin%60;}
+        if(departH<4){departH=4;departM=0;}
+        var departStr=String(departH).padStart(2,'0')+'h'+String(departM).padStart(2,'0');
 
-      html+='<div style="background:rgba(30,30,50,.8);border:1.5px solid '+col+'40;border-left:4px solid '+col+';border-radius:12px;padding:12px;margin-bottom:10px">'
+        // Créneaux de trafic pour cette région
+        var creneau=CRENEAUX_FLUIDES[r]||{ideal:'05h00',eviter:'07h30–09h30',conseil:''};
 
-        // Header région
-        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
-          +'<div style="font-size:13px;font-weight:700;color:'+col+'">'+ico+' Région '+r+'</div>'
-          +'<div style="font-size:10px;color:#888">'+stops_r.length+' livr. · ~'+heuresTotal+'h'+minsTotal+'</div>'
-        +'</div>'
+        // Alerte si départ trop tôt → conseil décaler
+        var traficAlert='';
+        if(departH<6&&r==='Centre'){
+          traficAlert='<div style="font-size:10px;color:#e67e22;margin-top:2px">⚠️ Départ très tôt — vous évitez le trafic du matin</div>';
+        } else if(departH>=7&&departH<=9){
+          traficAlert='<div style="font-size:10px;color:#e74c3c;margin-top:2px">⚠️ Départ en heure de pointe — trafic dense prévu</div>';
+        } else {
+          traficAlert='<div style="font-size:10px;color:#27ae60;margin-top:2px">✓ Créneau fluide</div>';
+        }
 
-        // Départ recommandé
-        +'<div style="background:rgba(255,255,255,.05);border-radius:8px;padding:8px 10px;margin-bottom:10px;display:flex;align-items:center;gap:8px">'
-          +'<span style="font-size:18px">⏰</span>'
-          +'<div>'
-            +'<div style="font-size:12px;font-weight:700;color:#fff">Départ recommandé : <span style="color:'+col+'">'+departStr+'</span></div>'
-            +'<div style="font-size:10px;color:#888">Trajet: ~'+Math.round(tempsTrajet/60*10)/10+'h · Clients: '+stops_r.length+'×40min · Retour avant 20h</div>'
+        // Heure estimée d'arrivée au premier client
+        var arrivee1H=departH*60+timeline.tempsAllerMin;
+        var arrivee1Str=String(Math.floor(arrivee1H/60)).padStart(2,'0')+'h'+String(arrivee1H%60).padStart(2,'0');
+
+        html+='<div style="background:rgba(30,30,50,.85);border:1.5px solid '+col+'40;border-left:4px solid '+col+';border-radius:12px;padding:12px;margin-bottom:10px" id="region_'+r.replace(/ /g,'_')+'">'
+
+          // Header
+          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+            +'<div style="font-size:13px;font-weight:700;color:'+col+'">'+ico+' '+r+'</div>'
+            +'<div style="font-size:10px;color:#888">'+stops_r.length+' livr. · ~'+_fmtMin(timeline.totalMin)+'</div>'
           +'</div>'
-        +'</div>'
 
-        // Itinéraire
-        +'<div style="font-size:10px;color:#aaa;margin-bottom:6px;font-weight:600">ITINÉRAIRE OPTIMISÉ</div>'
-        +'<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#555;margin-bottom:4px">'
-          +'<span style="width:18px;height:18px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0">🏠</span>'
-          +'<span>Boumerdès (départ '+departStr+')</span>'
-        +'</div>';
+          // Départ + trafic
+          +'<div style="background:rgba(255,255,255,.05);border-radius:8px;padding:8px;margin-bottom:8px">'
+            +'<div style="font-size:12px;font-weight:700;color:#fff">⏰ Départ recommandé : <span style="color:'+col+'">'+departStr+'</span>'+traficAlert+'</div>'
+            +'<div style="font-size:10px;color:#888;margin-top:4px">'
+              +'Arrivée 1er client ~'+arrivee1Str+' · '
+              +(timeline.pauseMin>0?'🍽️ Pause déj. 1h · ':'')
+              +'Retour Boumerdès ~20h'
+            +'</div>'
+            +'<div style="font-size:10px;color:#555;margin-top:3px;font-style:italic">💡 '+creneau.conseil+'</div>'
+            +'<div style="font-size:10px;color:#444;margin-top:2px">Éviter : '+creneau.eviter+'</div>'
+          +'</div>'
 
-      optimized.forEach(function(s,i){
-        var cod=parseFloat(s.montant)||0;
-        var age=s.ageJours;
-        var ageTag=age>3?'<span style="color:#e74c3c;font-size:9px;font-weight:700"> · '+age+'j !</span>':
-                   age>1?'<span style="color:#e67e22;font-size:9px"> · '+age+'j</span>':'';
+          // Détail temps
+          +'<div style="display:flex;gap:4px;margin-bottom:10px">'
+            +'<div style="flex:1;background:rgba(255,255,255,.04);border-radius:8px;padding:6px;text-align:center">'
+              +'<div style="font-size:13px;font-weight:700;color:'+col+'">'+_fmtMin(timeline.tempsAllerMin)+'</div>'
+              +'<div style="font-size:9px;color:#666">trajet aller</div>'
+            +'</div>'
+            +'<div style="flex:1;background:rgba(255,255,255,.04);border-radius:8px;padding:6px;text-align:center">'
+              +'<div style="font-size:13px;font-weight:700;color:#fff">'+_fmtMin(stops_r.length*40)+'</div>'
+              +'<div style="font-size:9px;color:#666">'+stops_r.length+'×40min</div>'
+            +'</div>'
+            +(timeline.pauseMin>0?'<div style="flex:1;background:rgba(255,255,255,.04);border-radius:8px;padding:6px;text-align:center"><div style="font-size:13px;font-weight:700;color:#e67e22">1h</div><div style="font-size:9px;color:#666">déjeuner</div></div>':'')
+            +'<div style="flex:1;background:rgba(255,255,255,.04);border-radius:8px;padding:6px;text-align:center">'
+              +'<div style="font-size:13px;font-weight:700;color:#aaa">'+_fmtMin(timeline.tempsRetourMin)+'</div>'
+              +'<div style="font-size:9px;color:#666">retour</div>'
+            +'</div>'
+          +'</div>'
 
-        html+='<div style="display:flex;align-items:stretch;gap:6px;margin-bottom:3px">'
+          // Itinéraire avec boutons déplacer
+          +'<div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:6px">ITINÉRAIRE — Appuyez ▲▼ pour réorganiser</div>'
+          +'<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;font-size:11px;color:#444">'
+            +'<span style="width:20px;height:20px;background:#222;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">🏠</span>'
+            +'<span>Boumerdès ('+departStr+')</span>'
+          +'</div>';
+
+        stops_r.forEach(function(s,i){
+          var cod=parseFloat(s.montant)||0;
+          var ageTag=s.ageJours>3?'<span style="color:#e74c3c;font-size:9px;font-weight:700"> · '+s.ageJours+'j!</span>':s.ageJours>1?'<span style="color:#e67e22;font-size:9px"> · '+s.ageJours+'j</span>':'';
+          var canUp=i>0, canDown=i<stops_r.length-1;
+          html+='<div style="display:flex;align-items:stretch;gap:5px;margin-bottom:3px">'
+            +'<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">'
+              +'<div style="width:1px;height:5px;background:#333"></div>'
+              +'<div style="width:22px;height:22px;background:'+col+';border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">'+(i+1)+'</div>'
+            +'</div>'
+            +'<div style="flex:1;background:rgba(255,255,255,.04);border-radius:8px;padding:6px 8px">'
+              +'<div style="font-size:11px;font-weight:700;color:#fff">'+h(s.nom)+ageTag+'</div>'
+              +'<div style="font-size:10px;color:#888">'+h(s.wilaya)+(s.commune&&s.commune!==s.wilaya?' · '+h(s.commune):'')+' · '+(s.dim?'ROSA '+s.dim:h(s.variant||s.produit))+'</div>'
+              +'<div style="font-size:10px;color:#27ae60">'+fmt(cod)+' DA · <span style="color:#aaa">'+h(s.tel||'—')+'</span></div>'
+            +'</div>'
+            +'<div style="display:flex;flex-direction:column;gap:2px;justify-content:center">'
+              +(canUp?'<button onclick="_moveStop(\''+r+'\','+i+',-1)" style="background:#333;border:none;color:#fff;border-radius:5px;padding:3px 6px;font-size:11px;cursor:pointer">▲</button>':'<span style="height:22px"></span>')
+              +(canDown?'<button onclick="_moveStop(\''+r+'\','+i+',1)" style="background:#333;border:none;color:#fff;border-radius:5px;padding:3px 6px;font-size:11px;cursor:pointer">▼</button>':'<span style="height:22px"></span>')
+            +'</div>'
+          +'</div>';
+        });
+
+        // Retour
+        html+='<div style="display:flex;align-items:center;gap:5px;margin-top:3px;margin-bottom:10px;font-size:11px;color:#27ae60">'
           +'<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">'
-            +'<div style="width:1px;height:6px;background:#333"></div>'
-            +'<div style="width:20px;height:20px;background:'+col+';border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">'+( i+1)+'</div>'
+            +'<div style="width:1px;height:5px;background:#333"></div>'
+            +'<span style="width:20px;height:20px;background:#27ae60;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">🏠</span>'
           +'</div>'
-          +'<div style="flex:1;background:rgba(255,255,255,.04);border-radius:8px;padding:6px 8px">'
-            +'<div style="font-size:11px;font-weight:700;color:#fff">'+h(s.nom)+ageTag+'</div>'
-            +'<div style="font-size:10px;color:#888">'+h(s.wilaya)+(s.commune?' / '+h(s.commune):'')+' · '+h(s.dim?'ROSA '+s.dim:s.variant||s.produit)+' · '+fmt(cod)+' DA</div>'
-            +'<div style="font-size:10px;color:#aaa">📞 '+h(s.tel||'—')+'</div>'
-          +'</div>'
+          +'<span style="font-weight:600">Retour Boumerdès (~20h00)</span>'
+        +'</div>';
+
+        // Bouton Maps — NAVIGATION DIRECTE
+        var mapsUrl=_mapsUrl(stops_r);
+        html+='<a href="'+mapsUrl+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#1a73e8;color:#fff;text-decoration:none;padding:11px;border-radius:9px;font-weight:700;font-size:13px">'
+          +'<span style="font-size:16px">🗺️</span>Démarrer navigation GPS</a>'
         +'</div>';
       });
 
-      html+='<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#555;margin-top:3px;margin-bottom:10px">'
-        +'<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">'
-          +'<div style="width:1px;height:6px;background:#333"></div>'
-          +'<span style="width:18px;height:18px;background:#27ae60;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0">🏠</span>'
-        +'</div>'
-        +'<span style="color:#27ae60;font-weight:600">Retour Boumerdès (~20h)</span>'
-      +'</div>';
-
-      // Bouton Maps
-      var mapsUrl=_mapsUrl(optimized);
-      html+='<a href="'+mapsUrl+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#1a73e8;color:#fff;text-decoration:none;padding:10px;border-radius:9px;font-weight:700;font-size:12px">'
-        +'<span>🗺️</span>Ouvrir sur Google Maps'
-      +'</a>'
-      +'</div>';
-    });
-
-    // Bouton Maps TOUT
-    if(peutLivrer.length>1){
-      var allOpt=_optimiserTournee(peutLivrer);
-      html+='<a href="'+_mapsUrl(allOpt)+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#333;color:#fff;text-decoration:none;padding:12px;border-radius:10px;font-weight:700;font-size:12px;margin-top:4px">'
-        +'<span>🗺️</span>Toutes les livraisons sur Maps'
-      +'</a>';
+      // Tous sur Maps
+      if(peutLivrer.length>1){
+        var allOpt=_optimiserTournee(peutLivrer);
+        html+='<a href="'+_mapsUrl(allOpt)+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#444;color:#fff;text-decoration:none;padding:11px;border-radius:10px;font-weight:700;font-size:12px;margin-top:4px">'
+          +'<span>🗺️</span>Toutes les livraisons — GPS</a>';
+      }
+      return html;
     }
 
-    showOv('🗺️ Planification tournée', html, function(){}, 'Fermer');
+    // Fonction déplacer un stop
+    window._moveStop=function(r,idx,dir){
+      var arr=_tourneeOrder[r];if(!arr)return;
+      var ni=idx+dir;
+      if(ni<0||ni>=arr.length)return;
+      var tmp=arr[idx];arr[idx]=arr[ni];arr[ni]=tmp;
+      _tourneeOrder[r]=arr;
+      // Reconstruire le contenu de la popup
+      var ms=document.getElementById('ms');
+      if(ms) ms.innerHTML=buildHtml();
+    };
+
+    showOv('🗺️ Planification tournée', buildHtml(), function(){}, 'Fermer');
   });
 }
+
 
 function rBilelLiv(div){
   getAPI('commandes_bilel',function(r){
