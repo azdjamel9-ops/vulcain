@@ -2097,6 +2097,7 @@ function rZahraConf(div, _fil){
       if(e.includes('INJOIGN')) return '<span style="display:inline-block;margin-top:4px;background:rgba(231,76,60,.15);color:var(--r);border:1px solid rgba(231,76,60,.3);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">Injoignable</span>';
       if(e.includes('OCCUP'))  return '<span style="display:inline-block;margin-top:4px;background:rgba(231,76,60,.12);color:var(--o);border:1px solid rgba(231,76,60,.25);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">Occupe</span>';
       if(e.includes('RAPPEL')) return '<span style="display:inline-block;margin-top:4px;background:rgba(52,152,219,.12);color:#4FC3F7;border:1px solid rgba(52,152,219,.3);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">A rappeler</span>';
+      if(e.includes('SHOWROOM')) return '<span style="display:inline-block;margin-top:4px;background:rgba(155,89,182,.15);color:#A569BD;border:1px solid rgba(155,89,182,.3);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">🏛️ Showroom</span>';
       return '<span style="display:inline-block;margin-top:4px;background:rgba(136,136,136,.1);color:#888;padding:2px 8px;border-radius:6px;font-size:10px">'+h(etat)+'</span>';
     }
     function ordreEtat(e){
@@ -2170,7 +2171,7 @@ function rZahraConf(div, _fil){
             +'<a href="tel:'+h(c.tel)+'" style="background:var(--g);color:#fff;padding:7px 11px;border-radius:9px;font-size:12px;font-weight:700;text-decoration:none;text-align:center">📞</a>'
             +'<a href="'+waLink(c.tel,msgConfirmationClient(c))+'" target="_blank" style="display:block;background:#25D366;color:#fff;padding:7px 11px;border-radius:9px;font-size:12px;font-weight:700;text-decoration:none;text-align:center">WA</a>'
             +'<button class="btn-sm" style="background:var(--ac)" onclick="openConf('+realIdx+')">Résultat</button>'
-            +'<button class="btn-sm" style="background:#444" onclick="ouvrirEditCommande(\''+h(c.numCmd)+'\',\''+h(c.nom)+'\',\''+h(c.tel)+'\',\''+h(c.wilaya)+'\',\''+h(c.produit)+'\','+c.montant+')">✏️</button>'
+            +'<button class="btn-sm" style="background:#444" onclick="_editCmd('+_cmdeIdx(div,c.numCmd)+')">✏️</button>'
           +'</div>'
         +'</div></div>';
       });
@@ -2202,6 +2203,7 @@ function openConf(idx){
     +'<div class="opt" onclick="selOpt(\'zs\',this,\'INJOIGNABLE\',\'so\')">INJOIGNABLE</div>'
     +'<div class="opt" onclick="selOpt(\'zs\',this,\'OCCUPE\',\'so\')">OCCUPE</div>'
     +'<div class="opt" onclick="selOpt(\'zs\',this,\'RAPPELER\',\'sb\')">RAPPELER</div>'
+    +'<div class="opt" onclick="selOpt(\'zs\',this,\'SHOWROOM\',\'sb\')">🏛️ SHOWROOM</div>'
     +'</div>'
     +'<div style="margin-top:10px">'
     +'<div style="font-size:11px;color:#888;font-weight:600;margin-bottom:6px">Via quel transporteur ?</div>'
@@ -2213,6 +2215,7 @@ function openConf(idx){
     var stat=getSel('zs');if(!stat){alert('Selectionne !');return;}
     var transp=getSel('zt');
     if(stat==='CONFIRME'&&!transp){alert('Choisis le transporteur !');return;}
+    // SHOWROOM : pas de transporteur nécessaire
     send({source:'ZAHRA_CONFIRMATION',numCmd:c.numCmd,statut:stat,confirmedBy:'Aicha',notes:'',transporteur:transp||''},function(r){
       if(!r.success&&!r.found){
         showSuc('Probleme connexion','','La confirmation sera envoyee a la reconnexion',[]);
@@ -2243,60 +2246,130 @@ function openConf(idx){
     });
   },'Valider');
 }
+
+// Helper : retrouver l'index d'une commande dans div._cmdes par numCmd
+function _cmdeIdx(div, numCmd){
+  var cmdes = div && div._cmdes ? div._cmdes : [];
+  var idx = cmdes.findIndex ? cmdes.findIndex(function(c){return c.numCmd===numCmd;}) : -1;
+  return idx;
+}
+// Ouvrir la popup de modification depuis l'index dans div._cmdes
+function _editCmd(idx){
+  var div = document.querySelector('.tc');
+  var cmdes = div && div._cmdes ? div._cmdes : [];
+  var c = cmdes[idx];
+  if(!c) return;
+  ouvrirEditCommande(
+    c.numCmd, c.nom, c.tel, c.wilaya,
+    c.produit||c.variant||'', c.montant||0,
+    c.commune||'', c.adresse||c.commune||c.wilaya||''
+  );
+}
+
 function ouvrirEditCommande(numCmd, nom, tel, wilaya, produit, montant, commune, adresse){
-  commune=commune||''; adresse=adresse||'';
-  var trackNoest=_noestGetTracking(numCmd)||'';
-  var pOpts=PRODS.map(function(p){
-    var sel=(p.label===produit||p.titre===produit)?'selected':'';
+  commune = commune||'';
+  adresse = adresse||commune||wilaya||'';
+  var trackNoest = _noestGetTracking(numCmd)||'';
+
+  var pOpts = PRODS.map(function(p){
+    var sel = (p.label===produit||p.titre===produit)?'selected':'';
     return '<option value="'+h(p.label)+'" '+sel+'>'+h(p.label)+'</option>';
   }).join('');
 
-  showOv('✏️ Modifier — '+h(nom),
-    '<div style="font-size:11px;color:#888;margin-bottom:8px">N° '+h(numCmd)+(trackNoest?' · <span style="color:#4FC3F7">📡 '+trackNoest+'</span>':'')+'</div>'
-    +'<div style="font-size:11px;color:#888;font-weight:600;margin-bottom:4px">👤 Client</div>'
+  var upsellOpts = '<option value="">-- Article supplementaire (optionnel)</option>'
+    + PRODS.map(function(p){
+        return '<option value="'+h(p.label)+'|'+p.prix+'">'+h(p.label)+' - '+fmt(p.prix)+' DA</option>';
+      }).join('');
+
+  var body = ''
+    +'<div style="font-size:11px;color:#888;margin-bottom:8px">N '+h(numCmd)
+      +(trackNoest?' · <span style="color:#4FC3F7">Noest: '+trackNoest+'</span>':'')+'</div>'
+    +'<div style="font-size:11px;color:#888;font-weight:700;margin-bottom:4px">Client</div>'
     +'<input class="inp" id="ec_nom" placeholder="Nom *" value="'+h(nom)+'">'
-    +'<input class="inp" id="ec_tel" placeholder="Téléphone (0556...)" value="'+h(tel)+'" type="tel">'
+    +'<input class="inp" id="ec_tel" placeholder="Tel" value="'+h(tel)+'" type="tel">'
     +'<input class="inp" id="ec_wil" placeholder="Wilaya *" value="'+h(wilaya)+'">'
     +'<input class="inp" id="ec_com" placeholder="Commune" value="'+h(commune)+'">'
     +'<input class="inp" id="ec_adr" placeholder="Adresse" value="'+h(adresse)+'">'
-    +'<div style="font-size:11px;color:#888;font-weight:600;margin:8px 0 4px">📦 Commande</div>'
+    +'<div style="font-size:11px;color:#888;font-weight:700;margin:10px 0 4px">Commande</div>'
     +'<select class="inp" id="ec_prod"><option value="">-- Produit</option>'+pOpts+'</select>'
     +'<input type="number" class="amt-inp" id="ec_mt" placeholder="Montant DA" value="'+(montant||0)+'" inputmode="numeric">'
-    +(trackNoest?'<div style="font-size:10px;color:#4FC3F7;margin-top:6px;padding:5px 8px;background:rgba(79,195,247,.08);border-radius:8px">📡 Modification envoyée aussi à Noest</div>':''),
-    function(){
-      var newNom=document.getElementById('ec_nom').value.trim();
-      var newWil=document.getElementById('ec_wil').value.trim();
-      if(!newNom||!newWil){alert('Nom et Wilaya obligatoires');return;}
-      var newProdLbl=document.getElementById('ec_prod').value;
-      var _pr=PRODS.find(function(p){return p.label===newProdLbl;});
-      var dataSheets={
-        source:'UPDATE_COMMANDE', numCmd:numCmd,
-        nom:newNom,
-        tel:document.getElementById('ec_tel').value.trim()||undefined,
-        wilaya:newWil,
-        commune:document.getElementById('ec_com').value.trim()||undefined,
-        adresse:document.getElementById('ec_adr').value.trim()||undefined,
-        produit:_pr?_pr.titre:(newProdLbl||undefined),
-        variant:_pr?_pr.variant:undefined,
-        montant:parseInt(document.getElementById('ec_mt').value)||undefined
-      };
-      send(dataSheets,function(r){
-        if(r&&r.updated){
-          if(trackNoest){
-            send({source:'MODIFIER_NOEST',tracking:trackNoest,nom:newNom,tel:dataSheets.tel,wilaya:newWil,montant:dataSheets.montant},function(){});
-          }
-          showSuc('✅','Commande modifiée !',h(numCmd),[]);
-          invalidateCache(['commandes_bilel','commandes_confirmation','confirmations']);
-          setTimeout(function(){
-            var tc=document.querySelector('.tc');
-            var idx=Array.from(document.querySelectorAll('.tab')).findIndex(function(t){return t.classList.contains('on');});
-            if(tc&&idx>=0) window[PROFCFG[P].fns[idx]](tc);
-          },600);
-        } else {
-          showSuc('⚠️','Erreur','Commande non trouvée',[]);
-        }
-      });
-    },'Enregistrer');
+    +'<div style="font-size:11px;color:#888;font-weight:700;margin:10px 0 4px">Article supplementaire (upsell)</div>'
+    +'<select class="inp" id="ec_upsell" onchange="_upsellChange()">'+upsellOpts+'</select>'
+    +'<div id="ec_upsell_row" style="display:none;gap:6px;margin-top:4px">'
+      +'<input type="number" class="inp" id="ec_upsell_qty" placeholder="Qte" value="1" style="width:70px;margin:0">'
+      +'<input type="number" class="inp" id="ec_upsell_prix" placeholder="Prix DA" style="flex:1;margin:0" inputmode="numeric">'
+    +'</div>'
+    +'<div style="font-size:11px;color:#888;font-weight:700;margin:10px 0 6px">Option</div>'
+    +'<div id="ec_showroom_btn" onclick="_toggleShowroom()" style="padding:10px;border-radius:10px;background:#0A0A14;border:1px solid var(--brd);text-align:center;font-size:12px;cursor:pointer">🏛️ Invitation showroom</div>'
+    +'<input type="hidden" id="ec_showroom" value="0">'
+    +(trackNoest?'<div style="font-size:10px;color:#4FC3F7;margin-top:6px;padding:5px 8px;background:rgba(79,195,247,.08);border-radius:8px">Modification envoyee aussi a Noest</div>':'');
+
+  showOv('Modifier — '+h(nom), body, function(){
+    var newNom = document.getElementById('ec_nom').value.trim();
+    var newWil = document.getElementById('ec_wil').value.trim();
+    if(!newNom||!newWil){alert('Nom et Wilaya obligatoires');return;}
+    var newProdLbl = document.getElementById('ec_prod').value;
+    var _pr = PRODS.find(function(p){return p.label===newProdLbl;});
+
+    var upsellVal = document.getElementById('ec_upsell').value;
+    var upsellArticle = null;
+    if(upsellVal){
+      var parts = upsellVal.split('|');
+      var uQty  = parseInt(document.getElementById('ec_upsell_qty').value)||1;
+      var uPrix = parseFloat(document.getElementById('ec_upsell_prix').value)||parseFloat(parts[1])||0;
+      upsellArticle = {produit:parts[0],qte:uQty,prix:uPrix};
+    }
+
+    var showroom = document.getElementById('ec_showroom').value==='1';
+    var newMontant = parseInt(document.getElementById('ec_mt').value)||0;
+    if(upsellArticle) newMontant += upsellArticle.prix * upsellArticle.qte;
+
+    var dataSheets = {
+      source:'UPDATE_COMMANDE', numCmd:numCmd,
+      nom:newNom,
+      tel:document.getElementById('ec_tel').value.trim()||undefined,
+      wilaya:newWil,
+      commune:document.getElementById('ec_com').value.trim()||undefined,
+      adresse:document.getElementById('ec_adr').value.trim()||undefined,
+      produit:_pr?_pr.titre:(newProdLbl||undefined),
+      variant:_pr?_pr.variant:undefined,
+      montant:newMontant,
+      upsell:upsellArticle||undefined,
+      notes:showroom?'Invitation showroom demandee':undefined,
+    };
+
+    send(dataSheets, function(r){
+      if(r&&r.updated){
+        if(trackNoest) send({source:'MODIFIER_NOEST',tracking:trackNoest,nom:newNom,tel:dataSheets.tel,wilaya:newWil,montant:dataSheets.montant},function(){});
+        var msg = numCmd+(upsellArticle?' + '+upsellArticle.produit:'')+(showroom?' - Showroom note':'');
+        showSuc('','Commande modifiee !', msg, []);
+        invalidateCache(['commandes_bilel','commandes_confirmation','confirmations']);
+        setTimeout(refreshTab, 600);
+      } else {
+        showSuc('','Erreur','Commande non trouvee',[]);
+      }
+    });
+  }, 'Enregistrer');
+}
+function _upsellChange(){
+  var val = document.getElementById('ec_upsell').value;
+  var row = document.getElementById('ec_upsell_row');
+  if(row) row.style.display = val?'flex':'none';
+  if(val){
+    var pEl = document.getElementById('ec_upsell_prix');
+    if(pEl&&!pEl.value) pEl.value = val.split('|')[1]||'0';
+  }
+}
+function _toggleShowroom(){
+  var inp = document.getElementById('ec_showroom');
+  var btn = document.getElementById('ec_showroom_btn');
+  if(!inp||!btn) return;
+  var on = inp.value==='1';
+  inp.value = on?'0':'1';
+  btn.style.background  = on?'#0A0A14':'rgba(24,95,165,.25)';
+  btn.style.borderColor = on?'var(--brd)':'#4FC3F7';
+  btn.style.color       = on?'':'#4FC3F7';
+  btn.style.fontWeight  = on?'':'700';
 }
 
 // ── ZAHRA CONFIRMEES (filtrées depuis Sheets) ──
@@ -2345,7 +2418,7 @@ function rZahraConfirmees(div){
           +'<div class="li-sb" style="color:var(--gold)">'+fmt(c.montant)+' DA</div>'
           +'</div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">'
           +'<div class="bdg '+bcls+'">'+h(c.etat)+'</div>'
-          +'<button class="btn-sm" style="background:#555;font-size:10px;margin-top:2px" onclick="ouvrirEditCommande(\''+h(c.numCmd)+'\',\''+h(c.nom)+'\',\''+h(c.tel)+'\',\''+h(c.wilaya)+'\',\''+h(c.produit||c.variant)+'\','+c.montant+')">✏️ Modifier</button>'
+            +'<button class="btn-sm" style="background:#555;font-size:10px;margin-top:2px" onclick="_editCmd('+_cmdeIdx(div,c.numCmd)+')">✏️ Modifier</button>'
           +'</div></div></div>';
       });
     }
@@ -3204,6 +3277,7 @@ function rNesConfirm(div, _fil){
       if(e.includes('INJOIGN')) return '<span style="display:inline-block;margin-top:4px;background:rgba(231,76,60,.15);color:var(--r);border:1px solid rgba(231,76,60,.3);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">Injoignable</span>';
       if(e.includes('OCCUP'))  return '<span style="display:inline-block;margin-top:4px;background:rgba(231,76,60,.12);color:var(--o);border:1px solid rgba(231,76,60,.25);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">Occupe</span>';
       if(e.includes('RAPPEL')) return '<span style="display:inline-block;margin-top:4px;background:rgba(52,152,219,.12);color:#4FC3F7;border:1px solid rgba(52,152,219,.3);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">A rappeler</span>';
+      if(e.includes('SHOWROOM')) return '<span style="display:inline-block;margin-top:4px;background:rgba(155,89,182,.15);color:#A569BD;border:1px solid rgba(155,89,182,.3);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">🏛️ Showroom</span>';
       return '<span style="display:inline-block;margin-top:4px;background:rgba(136,136,136,.1);color:#888;padding:2px 8px;border-radius:6px;font-size:10px">'+h(etat)+'</span>';
     }
     function ordreEtat(e){
@@ -3213,12 +3287,13 @@ function rNesConfirm(div, _fil){
       return 2;
     }
 
-    var nbNeuf=0,nbRappel=0,nbInj=0,nbOcc=0;
+    var nbNeuf=0,nbRappel=0,nbInj=0,nbOcc=0,nbShow=0;
     cmdes.forEach(function(c){
       var eu=String(c.etat||'').toUpperCase();
       if(eu.includes('RAPPEL')) nbRappel++;
       else if(eu.includes('INJOIGN')) nbInj++;
       else if(eu.includes('OCCUP')) nbOcc++;
+      else if(eu.includes('SHOWROOM')) nbShow++;
       else nbNeuf++;
     });
 
@@ -3229,6 +3304,7 @@ function rNesConfirm(div, _fil){
       if(fil==='Rappeler') return eu.includes('RAPPEL');
       if(fil==='Injoignable') return eu.includes('INJOIGN');
       if(fil==='Occupe') return eu.includes('OCCUP');
+      if(fil==='Showroom') return eu.includes('SHOWROOM');
       return true;
     });
 
@@ -3241,6 +3317,7 @@ function rNesConfirm(div, _fil){
       {k:'Rappeler',   l:'Rappeler ('+nbRappel+')',     c:'#4FC3F7'},
       {k:'Injoignable',l:'Injoignable ('+nbInj+')',    c:'var(--r)'},
       {k:'Occupe',     l:'Occupe ('+nbOcc+')',         c:'var(--o)'},
+      {k:'Showroom',   l:'Showroom ('+nbShow+')',       c:'#A569BD'},
     ];
     html+='<div class="filter-row" style="margin-bottom:10px;flex-wrap:wrap;gap:6px">';
     FILTRES.forEach(function(f){
@@ -3272,7 +3349,7 @@ function rNesConfirm(div, _fil){
             +'<a href="tel:'+h(c.tel)+'" style="background:var(--g);color:#fff;padding:7px 11px;border-radius:9px;font-size:12px;font-weight:700;text-decoration:none;text-align:center">📞</a>'
             +'<a href="'+waLink(c.tel,msgConfirmationClient(c))+'" target="_blank" style="display:block;background:#25D366;color:#fff;padding:7px 11px;border-radius:9px;font-size:12px;font-weight:700;text-decoration:none;text-align:center">WA</a>'
             +'<button class="btn-sm" style="background:var(--ac)" onclick="openNesConf('+realIdx+')">Resultat</button>'
-            +'<button class="btn-sm" style="background:#444" onclick="ouvrirEditCommande(\''+h(c.numCmd)+'\',\''+h(c.nom)+'\',\''+h(c.tel)+'\',\''+h(c.wilaya)+'\',\''+h(c.produit)+'\','+c.montant+')">Modifier</button>'
+            +'<button class="btn-sm" style="background:#444" onclick="_editCmd('+_cmdeIdx(div,c.numCmd)+')">Modifier</button>'
           +'</div>'
         +'</div></div>';
       });
@@ -3302,6 +3379,7 @@ function openNesConf(idx){
     +'<div class="opt" onclick="selOpt(\'ns\',this,\'ANNULE\',\'sr\')">ANNULE</div>'
     +'<div class="opt" onclick="selOpt(\'ns\',this,\'INJOIGNABLE\',\'so\')">INJOIGNABLE</div>'
     +'<div class="opt" onclick="selOpt(\'ns\',this,\'RAPPELER\',\'sb\')">RAPPELER</div>'
+    +'<div class="opt" onclick="selOpt(\'ns\',this,\'SHOWROOM\',\'sb\')">🏛️ SHOWROOM</div>'
     +'</div>'
     +'<div style="margin-top:10px">'
     +'<div style="font-size:11px;color:#888;font-weight:600;margin-bottom:6px">Via quel transporteur ?</div>'
@@ -3313,6 +3391,7 @@ function openNesConf(idx){
     var stat=getSel('ns');if(!stat){alert('Selectionne !');return;}
     var transp=getSel('nt');
     if(stat==='CONFIRME'&&!transp){alert('Choisis le transporteur !');return;}
+    // SHOWROOM : pas de transporteur
     send({source:'ZAHRA_CONFIRMATION',numCmd:c.numCmd,statut:stat,confirmedBy:'Nesrine',notes:'',transporteur:transp||''},function(r){
       var acts=[];
       if(stat==='CONFIRME'){
