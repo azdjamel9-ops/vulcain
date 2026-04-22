@@ -2454,6 +2454,7 @@ function rZahraConf(div, _fil){
             +'<div class="li-nm">'+h(c.nom)+_srcBadge(c.numCmd)+'</div>'
             +'<div class="li-sb">'+prodDisplay+dimLabel+'</div>'
             +'<div class="li-sb" style="color:#aaa">'+h(c.wilaya)+' · '+h(c.date||'')+'</div>'
+            +'<div class="li-sb" style="color:#7fb3d3">📞 '+h(c.tel||'—')+'</div>'
             +'<div class="li-sb" style="color:var(--gold)">'+fmt(c.montant)+' DA</div>'
             +(hasStatut?'<div style="margin-top:2px">'+suiviBadge(c.etat)+'</div>':'')
           +'</div>'
@@ -2514,11 +2515,16 @@ function openConf(idx){
       var acts=[];
       if(stat==='CONFIRME'){
         var mb=c.numCmd+' | '+c.nom+' | '+c.wilaya+'\n'+c.produit+'\nCOD: '+fmt(c.montant)+' DA\nTel: '+c.tel;
+        var agentNom2=P==='zahra'?'Aicha':P==='mehdi'?'Mehdi':'Agent';
+        var msgBilel2='Salam Bilel !\n\nNouvelle commande confirmee pour toi :\n\n'+mb+'\n\nMerci ! - Le Vulcain';
+        var msgMehdi2='Salam Mehdi !\n\nCommande confirmee par '+agentNom2+' :\n\n'+mb+'\n- Le Vulcain';
         if(transp==='Bilel'){
-          acts.push({lbl:'WA Bilel',href:waLink(WA.bilel,'Commande confirmee\n'+mb),bg:'#BA7517'});
-          if(elec) acts.push({lbl:'Info Moh',href:waLink(WA.moh,'Cheminee confirmee\n'+c.numCmd+' | '+c.produit),bg:'#1D9E75'});
-        } else {
-          acts.push({lbl:'WA client',href:waLink(c.tel,'Bonjour '+c.nom+'! Commande confirmee. Livraison sous 48h.'),bg:'#25D366'});
+          acts.push({lbl:'📲 Bilel',href:waLink(WA.bilel,msgBilel2),bg:'#BA7517'});
+          if(P!=='mehdi') acts.push({lbl:'📲 Mehdi',href:waLink(WA.mehdi,msgMehdi2),bg:'#185FA5'});
+          if(elec) acts.push({lbl:'📲 Moh',href:waLink(WA.moh,'Salam Moh !\n\nCheminee confirmee :\n'+c.numCmd+' | '+c.produit+'\nPreparer pour Bilel. Merci !'),bg:'#1D9E75'});
+        } else if(transp==='Noest'){
+          if(P!=='mehdi') acts.push({lbl:'📲 Mehdi',href:waLink(WA.mehdi,msgMehdi2),bg:'#185FA5'});
+          acts.push({lbl:'📲 Client WA',href:waLink(c.tel,'Bonjour '+c.nom+'! Commande confirmee. Livraison sous 48h via Noest.'),bg:'#25D366'});
         }
       }
       delete _apiCache['commandes_confirmation'];
@@ -3783,6 +3789,7 @@ function rNesConfirm(div, _fil){
             +'<div class="li-nm">'+h(c.nom)+_srcBadge(c.numCmd)+'</div>'
             +'<div class="li-sb">'+prodDisplay+dimLabel+'</div>'
             +'<div class="li-sb" style="color:#aaa">'+h(c.wilaya)+' · '+h(c.date||'')+'</div>'
+            +'<div class="li-sb" style="color:#7fb3d3">📞 '+h(c.tel||'—')+'</div>'
             +'<div class="li-sb" style="color:var(--gold)">'+fmt(c.montant)+' DA</div>'
             +(hasStatut?'<div style="margin-top:2px">'+suiviBadge(c.etat)+'</div>':'')
           +'</div>'
@@ -3838,10 +3845,12 @@ function openNesConf(idx){
       if(stat==='CONFIRME'){
         var mb=c.numCmd+' | '+c.nom+' | '+c.wilaya+'\n'+c.produit+'\nCOD: '+fmt(c.montant)+' DA\nTel: '+c.tel;
         if(transp==='Bilel'){
-          acts.push({lbl:'WA Bilel',href:waLink(WA.bilel,'Commande confirmee\n'+mb),bg:'#BA7517'});
-          if(elec) acts.push({lbl:'Info Moh',href:waLink(WA.moh,'Cheminee confirmee\n'+c.numCmd+' | '+c.produit),bg:'#1D9E75'});
+          acts.push({lbl:'📲 Bilel',href:waLink(WA.bilel,'Salam Bilel !\n\nNouvelle commande confirmee :\n\n'+mb+'\n\nMerci !'),bg:'#BA7517'});
+          acts.push({lbl:'📲 Mehdi',href:waLink(WA.mehdi,'Salam Mehdi !\n\nConfirmee par Nesrine :\n\n'+mb),bg:'#185FA5'});
+          if(elec) acts.push({lbl:'📲 Moh',href:waLink(WA.moh,'Salam Moh !\n\nCheminee confirmee :\n'+c.numCmd+' | '+c.produit+'\nPreparer pour Bilel !'),bg:'#1D9E75'});
         } else {
-          acts.push({lbl:'WA client',href:waLink(c.tel,'Bonjour '+c.nom+'! Commande confirmee. Livraison sous 48h.'),bg:'#25D366'});
+          acts.push({lbl:'📲 Mehdi',href:waLink(WA.mehdi,'Salam Mehdi !\n\nConfirmee par Nesrine :\n\n'+mb),bg:'#185FA5'});
+          acts.push({lbl:'📲 Client WA',href:waLink(c.tel,'Bonjour '+c.nom+'! Commande confirmee. Livraison sous 48h via Noest.'),bg:'#25D366'});
         }
       }
       delete _apiCache['commandes_confirmation'];
