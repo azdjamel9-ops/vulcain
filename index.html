@@ -436,10 +436,10 @@ var PROFCFG = {
     tabs:['📞 A confirmer','✅ Traitées','📋 Journee','🚚 Livraisons','📡 Noest','📊 Production','🗃️ Inventaire','👥 Contact'],
     fns:['rZahraConf','rZahraConfirmees','rZahraJour','rNesBilel','rNesNoest','rZahraProd','rZahraInv','rContact']},
   nesrine:{name:'Nesrine',ic:'📱',color:'#6C3483',
-    tabs:['📊 Dashboard','➕ Cmde','📦 Stock','📞 Confirm.','✅ Traitées','🚚 Livraisons','📡 Noest','🏭 Atelier','🏗️ Planif.','💸 Moh','🛒 Achats','👥 Contact'],
-    fns:['rNesDash','rNesCmde','rNesStock','rNesConfirm','rZahraConfirmees','rNesBilel','rNesNoest','rNesAtelier','rPlanifProd','rNesPayer','rNesAchats','rContact']},
+    tabs:['📊 Dashboard','➕ Cmde','📦 Stock','📞 Confirm.','✅ Traitées','🚚 Livraisons','📡 Noest','🏭 Atelier','💸 Moh','🔧 Matieres','👥 Contact'],
+    fns:['rNesDash','rNesCmde','rNesStock','rNesConfirm','rZahraConfirmees','rNesBilel','rNesNoest','rNesAtelier','rNesPayer','rNesAchats','rContact']},
   mehdi:{name:'Mehdi',ic:'📊',color:'#185FA5',
-    tabs:['📊 Dashboard','📦 Cmdes','📞 A conf.','✅ Traitées','🚚 Livraisons','📡 Noest','📊 Situation','🏭 Prod.','🏗️ Planif.','👥 Equipe','🚚 Bilel','📈 Ads','👥 Contact'],
+    tabs:['📊 Dashboard','📦 Cmdes','📞 A conf.','✅ Traitées','🚚 Livraisons','📡 Noest','📊 Situation','🏭 Prod.','📦 Stock','👥 Equipe','🚚 Bilel','📈 Ads','👥 Contact'],
     fns:['rMehdiDash','rMehdiCmdes','rZahraConf','rZahraConfirmees','rNesBilel','rNesNoest','rMehdiSituation','rMehdiProd','rPlanifProd','rMehdiEquipe','rMehdiBilel','rMehdiAds','rContact']}
 };
 
@@ -3215,13 +3215,164 @@ function envNesCmde(){
 
 // ── NESRINE STOCK ──
 function rNesStock(div){
-  _renderStock('stock_elec', div, {
-    titre:    '⚡ Stock cheminées ROSA',
-    grille:   true,
-    editable: false
+  div.innerHTML='<div class="slt">Stock & Planification</div>'+_skelHtml(4);
+  getAPIs(['stock_elec','commandes_bilel','stock_intrants'],function(_d){
+    var stockElec=(_d['stock_elec']||{}).stock||[];
+    var intrants=(_d['stock_intrants']||{}).intrants||[];
+    var cmdesRaw=(_d['commandes_bilel']||{}).commandes||[];
+
+    // Helper stock intrants
+    function stockAct(id){var f=intrants.find(function(i){return i.id===id;});return f?(f.actuel||0):999;}
+    function stockMn(id){var f=intrants.find(function(i){return i.id===id;});return f?(f.min||0):0;}
+
+    // Filtrer commandes cheminées non livrées
+    var cmdes=cmdesRaw.filter(function(c){
+      var e=String(c.etat||c.statut||'').toUpperCase();
+      var sit=String(c.situation||'').toLowerCase();
+      var p=String(c.produit||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      if(e.includes('FAUX')||e.includes('ANNUL')) return false;
+      if(sit.includes('livr')||sit.includes('retour')) return false;
+      return p.includes('rosa')||p.includes('electr')||p.includes('chim')||p.includes('elect');
+    }).map(function(c){
+      var dimMatch=String(c.variant||c.produit||'').match(/(\d+cm)/i);
+      var dim=dimMatch?dimMatch[1]:'';
+      var dimNum=dim.replace('cm','');
+      var act=dim?stockAct('caisson_'+dimNum):999;
+      var mn=dim?stockMn('caisson_'+dimNum):0;
+      var etatUp=String(c.etat||'').toUpperCase();
+      var isConf=etatUp.includes('CONFIRM');
+      var prio=dim&&act===0?1:dim&&act<=mn?2:isConf?3:4;
+      return Object.assign({},c,{dim:dim,act:act,mn:mn,prio:prio});
+    });
+
+    // Grouper commandes par dimension
+    var dimMap={};
+    var DIMS_ORDER=['80cm','100cm','120cm','140cm','160cm','200cm'];
+    cmdes.forEach(function(c){
+      var k=c.dim||'?';
+      if(!dimMap[k]) dimMap[k]={dim:k,total:0,urgent:0,conf:0,attente:0,act:c.act,mn:c.mn,prio:4};
+      dimMap[k].total++;
+      dimMap[k].prio=Math.min(dimMap[k].prio,c.prio);
+      if(c.prio<=2) dimMap[k].urgent++;
+      if(String(c.etat||'').toUpperCase().includes('CONFIRM')) dimMap[k].conf++;
+      else dimMap[k].attente++;
+    });
+
+    var html='';
+
+    // ════════════════════════════════════
+    // SECTION 1 — STOCK CHEMINÉES (grille)
+    // ════════════════════════════════════
+    html+='<div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:.5px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--brd)">⚡ STOCK CHEMINÉES ROSA</div>';
+
+    if(!stockElec.length){
+      html+='<div class="empty">Stock non initialisé</div>';
+    } else {
+      html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">';
+      stockElec.forEach(function(s){
+        var v=parseInt(s.actuel)||0;
+        var min=parseInt(s.min)||10;
+        var dim=String(s.dim||s.dimension||'');
+        var col=v<=0?'#e74c3c':v<=min?'#e67e22':'#27ae60';
+        var bg=v<=0?'rgba(231,76,60,.1)':v<=min?'rgba(230,126,34,.08)':'rgba(39,174,96,.07)';
+        var badge=v<=0?'Vide':v<=min?'Bas':'OK';
+        var badgeCls=v<=0?'br':v<=min?'bo':'bg';
+
+        // Données planification pour cette dimension
+        var dPlan=dimMap[dim]||null;
+        var planRow='';
+        if(dPlan){
+          var pCol=dPlan.prio===1?'#e74c3c':dPlan.prio===2?'#e67e22':'#27ae60';
+          var pIco=dPlan.prio===1?'🔴':dPlan.prio===2?'🟠':'📦';
+          planRow='<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.07)">'
+            +'<div style="font-size:10px;color:#888">A produire</div>'
+            +'<div style="font-size:18px;font-weight:900;color:'+pCol+'">'+dPlan.total+' <span style="font-size:10px;font-weight:400;color:#888">cmde'+(dPlan.total>1?'s':'')+'</span></div>'
+            +(dPlan.urgent>0?'<div style="font-size:9px;color:'+pCol+';font-weight:700">'+pIco+' '+dPlan.urgent+' urgent'+(dPlan.urgent>1?'s':'')+'</div>':'')
+          +'</div>';
+        }
+
+        html+='<div style="background:'+bg+';border:2px solid '+col+'50;border-radius:14px;padding:12px 10px;text-align:center">'
+          +'<div style="font-size:11px;color:#aaa;font-weight:600;margin-bottom:2px">ROSA</div>'
+          +'<div style="font-size:18px;font-weight:900;color:#fff">'+dim+'</div>'
+          +'<div style="font-size:32px;font-weight:900;color:'+col+';line-height:1.1;margin:4px 0">'+v+'</div>'
+          +'<div class="bdg '+badgeCls+'" style="font-size:9px;margin:0 auto 2px;width:fit-content">'+badge+'</div>'
+          +'<div style="font-size:9px;color:#666">min '+min+'</div>'
+          +planRow
+        +'</div>';
+      });
+      html+='</div>';
+    }
+
+    // ════════════════════════════════════
+    // SECTION 2 — PLANIFICATION PRODUCTION
+    // ════════════════════════════════════
+    var totalCmdes=cmdes.length;
+    var totalUrgent=cmdes.filter(function(c){return c.prio<=2;}).length;
+
+    html+='<div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:.5px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--brd)">🏗️ PLANIFICATION PRODUCTION</div>';
+
+    if(!totalCmdes){
+      html+='<div class="empty">Aucune commande en cours</div>';
+    } else {
+      // Bannière urgence
+      if(totalUrgent>0){
+        html+='<div style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.35);border-radius:12px;padding:10px 14px;margin-bottom:12px">'
+          +'<div style="font-size:13px;font-weight:700;color:#e74c3c">🔴 '+totalUrgent+' cheminee'+(totalUrgent>1?'s':'')+' urgente'+(totalUrgent>1?'s':'')+' — Stock epuise</div>'
+          +'<div style="font-size:11px;color:#888;margin-top:2px">Moh doit produire en priorité</div>'
+        +'</div>';
+      }
+
+      // Résumé global
+      html+='<div style="display:flex;gap:8px;margin-bottom:12px">'
+        +'<div style="flex:1;background:rgba(30,30,50,.8);border:1px solid var(--brd);border-radius:10px;padding:10px;text-align:center">'
+          +'<div style="font-size:22px;font-weight:900;color:#fff">'+totalCmdes+'</div>'
+          +'<div style="font-size:10px;color:#888">commandes</div>'
+        +'</div>'
+        +'<div style="flex:1;background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.3);border-radius:10px;padding:10px;text-align:center">'
+          +'<div style="font-size:22px;font-weight:900;color:#e74c3c">'+totalUrgent+'</div>'
+          +'<div style="font-size:10px;color:#888">urgentes</div>'
+        +'</div>'
+        +'<div style="flex:1;background:rgba(39,174,96,.08);border:1px solid rgba(39,174,96,.25);border-radius:10px;padding:10px;text-align:center">'
+          +'<div style="font-size:22px;font-weight:900;color:#27ae60">'+Object.keys(dimMap).length+'</div>'
+          +'<div style="font-size:10px;color:#888">dimensions</div>'
+        +'</div>'
+      +'</div>';
+
+      // Bouton WA Moh
+      var urgentDims=Object.values(dimMap).filter(function(d){return d.prio<=2;}).sort(function(a,b){return a.prio-b.prio;});
+      var allDims=Object.values(dimMap).sort(function(a,b){return a.prio-b.prio;});
+      var lignes=urgentDims.length>0
+        ? urgentDims.map(function(d){return (d.prio===1?'[URGENT]':'[BAS]')+' ROSA '+d.dim+' : '+d.urgent+' piece'+(d.urgent>1?'s':'');}).join('\n')
+        : allDims.map(function(d){return 'ROSA '+d.dim+' : '+d.total+' piece'+(d.total>1?'s':'');}).join('\n');
+      var msgMoh=urgentDims.length>0
+        ? 'Salam Moh !\n\nAkhdem had les dimensions, rahoum urgent !\n\n'+lignes+'\n\nMerci !\n- Le Vulcain'
+        : 'Salam Moh !\n\nLes commandes a produire :\n\n'+lignes+'\n\nMerci Moh !\n- Le Vulcain';
+
+      html+='<a href="'+waLink(WA.moh,msgMoh)+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;text-decoration:none;padding:13px;border-radius:12px;font-weight:700;font-size:14px;margin-bottom:14px">'
+        +'<span style="font-size:20px">📲</span>Envoyer a Moh sur WhatsApp'
+      +'</a>';
+
+      // Commandes confirmées (détail léger)
+      var conf=cmdes.filter(function(c){return String(c.etat||'').toUpperCase().includes('CONFIRM');}).sort(function(a,b){return a.prio-b.prio;});
+      if(conf.length>0){
+        html+='<div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:6px">Commandes confirmées ('+conf.length+')</div>';
+        conf.forEach(function(c){
+          var col=c.prio===1?'rgba(231,76,60,.6)':c.prio===2?'rgba(243,156,18,.5)':'rgba(39,174,96,.3)';
+          var ico=c.prio===1?'🔴':c.prio===2?'🟠':'✅';
+          html+='<div class="li" style="border-left:3px solid '+col+';padding:8px 10px">'
+            +'<div class="li-row">'
+              +'<div style="flex:1"><div class="li-nm" style="font-size:12px">⚡ ROSA '+c.dim+'</div>'
+                +'<div class="li-sb">'+h(c.wilaya||'—')+' · '+h(c.date||'—')+'</div></div>'
+              +'<div style="font-size:11px;color:#aaa">'+ico+'</div>'
+            +'</div>'
+          +'</div>';
+        });
+      }
+    }
+
+    div.innerHTML=html;
   });
 }
-
 function editNesS(prod,val){
   showOv(prod,
     '<div style="text-align:center;font-size:12px;color:#888;margin-bottom:12px">Actuel: <b style="color:#fff">'+val+'</b></div>'
@@ -4201,30 +4352,7 @@ function payMoh(sol){
 }
 
 // ── NESRINE ACHATS ──
-function rNesAchats(div){
-  getAPI('liste_achats',function(r){
-    var achats=r.achats||[];
-    var html='<div class="slt">Intrants à commander</div>';
-    if(!achats.length){html+='<div class="empty">✅ Tous les intrants sont OK</div>';}
-    else{
-      achats.forEach(function(a){
-        html+='<div class="si" style="border-left:4px solid '+(a.urgent?'var(--r)':'var(--o)')+'">'
-          +'<div class="si-ic">📦</div>'
-          +'<div style="flex:1"><div class="si-nm">'+h(a.produit)+'</div>'
-          +'<div class="si-sb">Stock: '+a.actuel+' · Min: '+a.min+'</div>'
-          +'<div class="si-sb" style="color:'+(a.urgent?'var(--r)':'var(--o)')+'">Commander: '+a.aCommander+' · '+h(a.fournisseur||'')+'</div>'
-          +'</div><div class="si-bd '+(a.urgent?'salt':'slow')+'">'+(a.urgent?'URGENT':'BAS')+'</div></div>';
-      });
-      var msg='LISTE ACHATS INTRANTS\n\n';
-      achats.forEach(function(a){msg+=(a.urgent?'🚨':'⚠️')+' '+a.produit+': '+a.actuel+' → commander '+a.aCommander+'\n';});
-      html+='<div style="display:flex;gap:8px;margin-top:12px">'
-        +'<a class="btn btn-wa" style="flex:1;padding:14px;text-align:center;text-decoration:none" href="'+waLink(WA.mehdi,msg)+'">📱 Mehdi</a>'
-        +'<a class="btn" style="flex:1;padding:14px;text-align:center;text-decoration:none;background:#BA7517;color:#fff" href="'+waLink(WA.bilel,msg)+'">📱 Bilel</a></div>';
-    }
-    div.innerHTML=html;
-  });
-}
-
+function rNesAchats(div){ rMohStock(div); }
 // ═══════════════════════════════════════
 // ── MEHDI ──
 // ═══════════════════════════════════════════════════════════════════
@@ -4234,130 +4362,7 @@ function rNesAchats(div){
 // ══════════════════════════════════════════════
 // PLANIFICATION PRODUCTION (Nesrine + Mehdi)
 // ══════════════════════════════════════════════
-function rPlanifProd(div){
-  div.innerHTML='<div class="slt">Planification production</div>'+_skelHtml(4);
-  getAPIs(['commandes_bilel','stock_intrants'],function(_d){
-    var rCmdes=_d['commandes_bilel']||{};
-    var intrants=(_d['stock_intrants']||{}).intrants||[];
-
-    function stockActuel(id){var f=intrants.find(function(i){return i.id===id;});return f?(f.actuel||0):999;}
-    function stockMin(id){var f=intrants.find(function(i){return i.id===id;});return f?(f.min||0):0;}
-
-    // Filtrer : cheminées élec, non livrées, non faux/annulé
-    var cmdes=(rCmdes.commandes||[]).filter(function(c){
-      var e=String(c.etat||c.statut||'').toUpperCase().trim();
-      var sit=String(c.situation||'').toLowerCase();
-      var p=String(c.produit||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-      if(e.includes('FAUX')||e.includes('ANNUL')) return false;
-      if(sit.includes('livr')||sit.includes('retour')) return false;
-      return p.includes('rosa')||p.includes('electr')||p.includes('chim')||p.includes('elect');
-    });
-
-    // Enrichir avec dimension + priorité
-    cmdes=cmdes.map(function(c){
-      var dimMatch=String(c.variant||c.produit||'').match(/(\d+cm)/i);
-      var dim=dimMatch?dimMatch[1]:'';
-      var dimNum=dim.replace('cm','');
-      var act=dim?stockActuel('caisson_'+dimNum):999;
-      var min=dim?stockMin('caisson_'+dimNum):0;
-      var etatUp=String(c.etat||'').toUpperCase();
-      var isConf=etatUp.includes('CONFIRM');
-      var prio=dim&&act===0?1:dim&&act<=min?2:isConf?3:4;
-      return Object.assign({},c,{dim:dim,act:act,min:min,prio:prio});
-    });
-
-    if(!cmdes.length){div.innerHTML='<div class="empty">Aucune cheminee a produire</div>';return;}
-
-    // Grouper par dimension
-    var dims={};
-    var DIMS_ORDER=['80cm','100cm','120cm','140cm','160cm','200cm'];
-    cmdes.forEach(function(c){
-      var k=c.dim||'Autre';
-      if(!dims[k]) dims[k]={dim:k,total:0,urgent:0,conf:0,attente:0,act:c.act,min:c.min,prio:4};
-      dims[k].total++;
-      dims[k].prio=Math.min(dims[k].prio,c.prio);
-      if(c.prio===1||c.prio===2) dims[k].urgent++;
-      if(String(c.etat||'').toUpperCase().includes('CONFIRM')) dims[k].conf++;
-      else dims[k].attente++;
-    });
-
-    var dimList=Object.values(dims).sort(function(a,b){
-      if(a.prio!==b.prio) return a.prio-b.prio;
-      var ia=DIMS_ORDER.indexOf(a.dim),ib=DIMS_ORDER.indexOf(b.dim);
-      return (ia<0?99:ia)-(ib<0?99:ib);
-    });
-
-    var urgents=dimList.filter(function(d){return d.prio<=2;});
-    var totalUrgent=urgents.reduce(function(s,d){return s+d.urgent;},0);
-
-    var html='';
-
-    // Bannière résumé
-    if(totalUrgent>0){
-      html+='<div style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.35);border-radius:12px;padding:10px 14px;margin-bottom:12px">'
-        +'<div style="font-size:13px;font-weight:700;color:var(--r)">🔴 '+totalUrgent+' cheminee(s) a produire en URGENCE</div>'
-        +'<div style="font-size:11px;color:#888;margin-top:2px">Stock epuise ou critique — Moh doit produire maintenant</div>'
-      +'</div>';
-    }
-
-    // Grille par dimension
-    html+='<div class="slt">Par dimension</div>';
-    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">';
-    dimList.forEach(function(d){
-      var col=d.prio===1?'#e74c3c':d.prio===2?'#e67e22':d.prio===3?'#27ae60':'#555';
-      var bg =d.prio===1?'rgba(231,76,60,.12)':d.prio===2?'rgba(230,126,34,.1)':d.prio===3?'rgba(39,174,96,.08)':'rgba(30,30,50,.6)';
-      var ico=d.prio===1?'🔴':d.prio===2?'🟠':d.prio===3?'✅':'⏳';
-      var stockTxt=d.act<999?d.act+' en stock':'—';
-      var urgRow=d.urgent>0?('<div style="font-size:10px;font-weight:700;color:'+col+';margin-top:3px">'+ico+' '+d.urgent+' urgent'+(d.urgent>1?'s':'')+'</div>'):'';
-
-      html+='<div style="background:'+bg+';border:2px solid '+col+';border-radius:14px;padding:12px 10px;text-align:center">'
-        +'<div style="font-size:11px;color:#aaa;font-weight:600;margin-bottom:2px">ROSA</div>'
-        +'<div style="font-size:20px;font-weight:900;color:#fff">'+d.dim+'</div>'
-        +'<div style="font-size:34px;font-weight:900;color:'+col+';line-height:1.1;margin:4px 0">'+d.total+'</div>'
-        +'<div style="font-size:10px;color:#888">a produire</div>'
-        +urgRow
-        +'<div style="font-size:10px;color:#666;margin-top:4px">stock: '+stockTxt+'</div>'
-      +'</div>';
-    });
-    html+='</div>';
-
-    // Bouton WA vers Moh
-    var lignesUrgent=urgents.map(function(d){
-      return (d.prio===1?'[URGENT]':'[BAS]')+' ROSA '+d.dim+' : '+d.urgent+' piece'+(d.urgent>1?'s':'')+' (stock: '+d.act+')';
-    }).join('\n');
-    var lignesAll=dimList.map(function(d){
-      return 'ROSA '+d.dim+' : '+d.total+' piece'+(d.total>1?'s':'');
-    }).join('\n');
-    var msgUrgent=urgents.length>0
-      ? 'Salam Moh !\n\nAkhdem had les dimensions, rahoum urgent !\n\n'+lignesUrgent+'\n\nMerci !\n- Le Vulcain'
-      : 'Salam Moh !\n\nLes commandes a produire :\n\n'+lignesAll+'\n\nMerci Moh !\n- Le Vulcain';
-    html+='<div style="margin-top:4px">'
-      +'<a href="'+waLink(WA.moh,msgUrgent)+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;text-decoration:none;padding:14px;border-radius:12px;font-weight:700;font-size:14px">'
-        +'<span style="font-size:20px">📲</span>'
-        +'Envoyer a Moh sur WhatsApp'
-      +'</a>'
-    +'</div>';
-
-    // Liste détaillée
-    var cmdesConf=cmdes.filter(function(c){return String(c.etat||'').toUpperCase().includes('CONFIRM');});
-    if(cmdesConf.length>0){
-      html+='<div class="slt" style="margin-top:14px">Commandes confirmees ('+cmdesConf.length+')</div>';
-      cmdesConf.sort(function(a,b){return a.prio-b.prio;}).forEach(function(c){
-        var col=c.prio===1?'rgba(231,76,60,.6)':c.prio===2?'rgba(243,156,18,.5)':'rgba(39,174,96,.3)';
-        html+='<div class="li" style="border-left:3px solid '+col+'">'
-          +'<div class="li-row">'
-            +'<div style="flex:1"><div class="li-nm">⚡ ROSA '+c.dim+'</div>'
-              +'<div class="li-sb">📍 '+h(c.wilaya||'—')+' · 📅 '+h(c.date||'—')+'</div>'
-            +'</div>'
-            +'<div class="bdg'+(c.prio<=2?' br':' bg')+'" style="font-size:10px">'+(c.prio===1?'🔴 STOCK 0':c.prio===2?'🟠 Bas':'✅')+'</div>'
-          +'</div>'
-        +'</div>';
-      });
-    }
-
-    div.innerHTML=html;
-  });
-}
+function rPlanifProd(div){ rNesStock(div); }
 
 function rMehdiDash(div){
   var fil=localStorage.getItem('mdash_fil')||'mois';
