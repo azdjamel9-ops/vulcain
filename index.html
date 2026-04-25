@@ -1683,13 +1683,13 @@ function _mapsUrl(stops){
 function _calcTimeline(distMax, nbStops, departH){
   // Vitesse de base 90km/h autoroute (moins trafic)
   var coeff = TRAFIC_HEURE[departH] || 1.3;
-  var vitesse = Math.round(90 / coeff);
+  var vitesse = Math.round(70 / coeff);
 
   // Temps trajet total aller (avec trafic)
   var tempsAllerMin = Math.round(distMax / vitesse * 60);
   // Retour le soir → trafic de retour à 18h
   var coeff_retour = TRAFIC_HEURE[18] || 1.9;
-  var vitesse_retour = Math.round(90 / coeff_retour);
+  var vitesse_retour = Math.round(70 / coeff_retour);
   var tempsRetourMin = Math.round(distMax / vitesse_retour * 60);
   // Temps clients : 40 min chacun
   var tempsClients = nbStops * 40;
@@ -1715,6 +1715,74 @@ function _calcTimeline(distMax, nbStops, departH){
 function _fmtMin(m){
   var h=Math.floor(m/60), mn=m%60;
   return h+'h'+(mn>0?mn+'min':'');
+}
+
+function _ouvrirModeConducteur(stops, mapsUrl, region){
+  var lignes=[];
+  lignes.push('<!DOCTYPE html><html lang="fr"><head>');
+  lignes.push('<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">');
+  lignes.push('<title>Tournee Bilel</title><style>');
+  lignes.push('*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}');
+  lignes.push('body{background:#000;color:#fff;font-family:Arial,sans-serif;min-height:100vh;}');
+  lignes.push('.hd{background:#111;padding:14px 16px;position:sticky;top:0;z-index:100;border-bottom:2px solid #222;}');
+  lignes.push('.ht{font-size:13px;color:#888;font-weight:600;margin-bottom:8px;text-align:center}');
+  lignes.push('.bm{display:flex;align-items:center;justify-content:center;gap:10px;background:#1a73e8;color:#fff;text-decoration:none;padding:16px;border-radius:12px;font-size:17px;font-weight:900;width:100%;}');
+  lignes.push('.pg{height:4px;background:#222;position:sticky;top:72px;z-index:99;}');
+  lignes.push('.pb{height:4px;background:#1a73e8;transition:width .3s;}');
+  lignes.push('.stops{padding:12px}');
+  lignes.push('.sc{background:#111;border-radius:14px;margin-bottom:12px;overflow:hidden;border:2px solid #222;}');
+  lignes.push('.sc.done{opacity:.4;border-color:#333;}');
+  lignes.push('.sn{background:#1a73e8;color:#fff;font-size:11px;font-weight:700;padding:5px 14px;}');
+  lignes.push('.sb{padding:14px}');
+  lignes.push('.nom{font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;}');
+  lignes.push('.inf{font-size:14px;color:#888;margin-bottom:8px;}');
+  lignes.push('.prd{font-size:13px;color:#aaa;margin-bottom:4px;}');
+  lignes.push('.cod{font-size:18px;font-weight:700;color:#27ae60;margin-bottom:14px;}');
+  lignes.push('.bc{display:flex;align-items:center;justify-content:center;gap:10px;background:#27ae60;color:#fff;text-decoration:none;padding:18px;border-radius:12px;font-size:20px;font-weight:900;width:100%;margin-bottom:8px;}');
+  lignes.push('.bd{background:#222;color:#aaa;border:none;width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;}');
+  lignes.push('.age{display:inline-block;background:rgba(231,76,60,.2);color:#e74c3c;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;margin-left:6px;}');
+  lignes.push('.ft{padding:16px;text-align:center;color:#333;font-size:11px;}');
+  lignes.push('</style></head><body>');
+  // Header
+  lignes.push('<div class="hd"><div class="ht">Tournee Bilel — '+region+' — '+stops.length+' livraisons</div>');
+  lignes.push('<a class="bm" href="'+mapsUrl+'" target="_blank"><span>🗺️</span>NAVIGATION GPS</a></div>');
+  lignes.push('<div class="pg"><div class="pb" id="pgbar" style="width:0%"></div></div>');
+  lignes.push('<div class="stops">');
+  stops.forEach(function(stop,i){
+    var tel=String(stop.tel||'').replace(/\s/g,'');
+    var cod=(parseFloat(stop.montant)||0).toLocaleString('fr-FR');
+    var ageTag=stop.ageJours>3?'<span class="age">'+stop.ageJours+'j!</span>':'';
+    var prenom=(stop.nom||'').split(' ')[0];
+    var dim=stop.dim?'ROSA '+stop.dim:(stop.variant||stop.produit||'');
+    var commune=stop.commune&&stop.commune!==stop.wilaya?' - '+stop.commune:'';
+    lignes.push('<div class="sc" id="sc'+i+'">');
+    lignes.push('<div class="sn">ARRET '+(i+1)+' / '+stops.length+'</div>');
+    lignes.push('<div class="sb">');
+    lignes.push('<div class="nom">'+stop.nom+ageTag+'</div>');
+    lignes.push('<div class="inf">📍 '+stop.wilaya+commune+'</div>');
+    lignes.push('<div class="prd">⚡ '+dim+'</div>');
+    lignes.push('<div class="cod">💰 '+cod+' DA</div>');
+    if(tel){
+      lignes.push('<a class="bc" href="tel:'+tel+'"><span>📞</span>APPELER '+prenom+'</a>');
+    } else {
+      lignes.push('<div style="color:#555;text-align:center;padding:12px">Pas de numéro</div>');
+    }
+    lignes.push('<button class="bd" onclick="_fait('+i+','+stops.length+')">✓ Livre — passer au suivant</button>');
+    lignes.push('</div></div>');
+  });
+  lignes.push('</div><div class="ft">Le Vulcain · Tournée '+region+'</div>');
+  lignes.push('<script>');
+  lignes.push('function _fait(i,t){');
+  lignes.push('  var c=document.getElementById("sc"+i);if(c)c.classList.add("done");');
+  lignes.push('  var d=document.querySelectorAll(".done").length;');
+  lignes.push('  var p=document.getElementById("pgbar");if(p)p.style.width=Math.round(d/t*100)+"%";');
+  lignes.push('  var n=document.getElementById("sc"+(i+1));');
+  lignes.push('  if(n){setTimeout(function(){n.scrollIntoView({behavior:"smooth",block:"start"});},200);}');
+  lignes.push('  else{document.querySelector(".ft").innerHTML="<br><b style=\'font-size:18px;color:#27ae60\'>Tournee terminee ! Bon retour Boumerdes.</b><br>";}');
+  lignes.push('}');
+  lignes.push('<\/script></body></html>');
+  var blob=new Blob([lignes.join('\n')],{type:'text/html'});
+  window.open(URL.createObjectURL(blob),'_blank');
 }
 
 function planifierTournee(){
@@ -1903,8 +1971,16 @@ function planifierTournee(){
 
         // Bouton Maps — NAVIGATION DIRECTE
         var mapsUrl=_mapsUrl(stops_r);
-        html+='<a href="'+mapsUrl+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#1a73e8;color:#fff;text-decoration:none;padding:11px;border-radius:9px;font-weight:700;font-size:13px">'
-          +'<span style="font-size:16px">🗺️</span>Démarrer navigation GPS</a>'
+        var rKey=r;
+        var stopsJson=JSON.stringify(stops_r);
+        html+='<a href="'+mapsUrl+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#1a73e8;color:#fff;text-decoration:none;padding:11px;border-radius:9px;font-weight:700;font-size:13px;margin-bottom:6px">'
+          +'<span style="font-size:16px">🗺️</span>Démarrer navigation GPS</a>';
+        // Stocker les données pour le mode conducteur
+        window['_td_'+r.replace(/ /g,'_')]=stops_r;
+        window['_mu_'+r.replace(/ /g,'_')]=mapsUrl;
+        html+='<button onclick="_ouvrirModeConducteur(window[\"_td_'+r.replace(/ /g,'_')+'\"],window[\"_mu_'+r.replace(/ /g,'_')+'\"],\''+r.replace(/\'/g,'')+'\'" '
+          +'style="width:100%;padding:11px;background:#27ae60;color:#fff;border:none;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;margin-bottom:0">'
+          +'🚗 Mode conducteur — Appels 1 clic</button>'
         +'</div>';
       });
 
