@@ -427,20 +427,20 @@ var CONTACTS = {
 };
 var PROFCFG = {
   moh:{name:'Moh',ic:'⚡',color:'#1D9E75',
-    tabs:['⚡ Prod.','📋 Historique','🔧 Matieres','📋 Cmdes','⚡ Stock','💰 Compte','👥 Contact'],
-    fns:['rMohProd','rMohHistorique','rMohStock','rMohCmdes','rMohStockElec','rMohCompte','rContact']},
+    tabs:['⚡ Prod.','📋 Historique','🔧 Matieres','📋 Cmdes','⚡ Stock','💰 Compte','👥 Contact','❓ Aide'],
+    fns:['rMohProd','rMohHistorique','rMohStock','rMohCmdes','rMohStockElec','rMohCompte','rContact','rTutoTab']},
   bilel:{name:'Bilel',ic:'🚚',color:'#BA7517',
-    tabs:['🚚 Livraisons','💰 Compte','💸 Dépenses','📋 Historique','⚡ Stock','👥 Contact'],
-    fns:['rBilelLiv','rBilelCompte','rBilelDepenses','rBilelHistorique','rBilelStock','rContact']},
+    tabs:['🚚 Livraisons','💰 Compte','💸 Dépenses','📋 Historique','⚡ Stock','👥 Contact','❓ Aide'],
+    fns:['rBilelLiv','rBilelCompte','rBilelDepenses','rBilelHistorique','rBilelStock','rContact','rTutoTab']},
   zahra:{name:'Aicha',ic:'📦',color:'#D85A30',
-    tabs:['📞 A confirmer','✅ Traitées','📋 Journee','🚚 Livraisons','📡 Noest','📊 Production','🗃️ Inventaire','👥 Contact'],
-    fns:['rZahraConf','rZahraConfirmees','rZahraJour','rNesBilel','rNesNoest','rZahraProd','rZahraInv','rContact']},
+    tabs:['📞 A confirmer','✅ Traitées','📋 Journee','🚚 Livraisons','📡 Noest','📊 Production','🗃️ Inventaire','👥 Contact','❓ Aide'],
+    fns:['rZahraConf','rZahraConfirmees','rZahraJour','rNesBilel','rNesNoest','rZahraProd','rZahraInv','rContact','rTutoTab']},
   nesrine:{name:'Nesrine',ic:'📱',color:'#6C3483',
-    tabs:['📊 Dashboard','➕ Cmde','📦 Stock','📞 Confirm.','✅ Traitées','🚚 Livraisons','📡 Noest','🏭 Atelier','💸 Moh','🛒 Achats','👥 Contact'],
-    fns:['rNesDash','rNesCmde','rNesStock','rNesConfirm','rZahraConfirmees','rNesBilel','rNesNoest','rNesAtelier','rNesPayer','rNesAchats','rContact']},
+    tabs:['📊 Dashboard','➕ Cmde','📦 Stock','📞 Confirm.','✅ Traitées','🚚 Livraisons','📡 Noest','🏭 Atelier','💸 Moh','🛒 Achats','👥 Contact','❓ Aide'],
+    fns:['rNesDash','rNesCmde','rNesStock','rNesConfirm','rZahraConfirmees','rNesBilel','rNesNoest','rNesAtelier','rNesPayer','rNesAchats','rContact','rTutoTab']},
   mehdi:{name:'Mehdi',ic:'📊',color:'#185FA5',
-    tabs:['📊 Dashboard','📦 Cmdes','📞 A conf.','✅ Traitées','🚚 Livraisons','📡 Noest','📊 Situation','🏭 Prod.','📦 Stock','👥 Equipe','🚚 Bilel','📈 Ads','👥 Contact'],
-    fns:['rMehdiDash','rMehdiCmdes','rZahraConf','rZahraConfirmees','rNesBilel','rNesNoest','rMehdiSituation','rMehdiProd','rPlanifProd','rMehdiEquipe','rMehdiBilel','rMehdiAds','rContact']}
+    tabs:['📊 Dashboard','📦 Cmdes','📞 A conf.','✅ Traitées','🚚 Livraisons','📡 Noest','📊 Situation','🏭 Prod.','📦 Stock','👥 Equipe','🚚 Bilel','📈 Ads','👥 Contact','❓ Aide'],
+    fns:['rMehdiDash','rMehdiCmdes','rZahraConf','rZahraConfirmees','rNesBilel','rNesNoest','rMehdiSituation','rMehdiProd','rPlanifProd','rMehdiEquipe','rMehdiBilel','rMehdiAds','rContact','rTutoTab']}
 };
 
 // ═══════════════════════════════════════
@@ -803,6 +803,464 @@ function doSwitch(){
 
 // ═══════════════════════════════════════
 // CONTACT (commun)
+// ══════════════════════════════════════════════════════════
+// SYSTÈME TUTORIELS — Un guide par profil
+// ══════════════════════════════════════════════════════════
+
+var TUTOS = {
+
+  moh: {
+    titre: "Guide Moh — Production",
+    couleur: "#1D9E75",
+    onglets: [
+      {
+        nom: "⚡ Prod.",
+        titre: "Enregistrer une production",
+        emoji: "🔨",
+        etapes: [
+          "Ouvre l'onglet ⚡ Prod.",
+          "Tu vois la liste des cheminées à produire (par dimension).",
+          "Tape le nombre de pièces produites dans la case de la bonne dimension.",
+          "Appuie sur ✅ Confirmer — le stock se met à jour immédiatement.",
+          "Le système calcule ton salaire automatiquement (2 000 DA par pièce)."
+        ],
+        conseil: "💡 Commence toujours par les dimensions marquées 🔴 (urgentes — Bilel attend ces commandes)."
+      },
+      {
+        nom: "🔧 Matières",
+        titre: "Mettre à jour le stock de matières",
+        emoji: "📦",
+        etapes: [
+          "Ouvre l'onglet 🔧 Matières.",
+          "Tu vois les matières groupées : Caisson bois, Verre clair, Verre bronze, Électronique, Consommables.",
+          "Appuie sur la case de la matière à modifier.",
+          "Tape la nouvelle quantité (ce que tu vois physiquement dans l'atelier).",
+          "Appuie sur Enregistrer — la mise à jour est immédiate."
+        ],
+        conseil: "⚠️ Si une matière est en 🔴 rouge, c'est qu'elle est en dessous du minimum. Nesrine et Mehdi seront alertés."
+      },
+      {
+        nom: "📋 Cmdes",
+        titre: "Voir les commandes à produire",
+        emoji: "📋",
+        etapes: [
+          "Ouvre l'onglet 📋 Cmdes.",
+          "En haut : résumé par dimension (nombre total par taille de cheminée).",
+          "🔴 = produire EN URGENCE (Bilel a un client qui attend).",
+          "🟠 = stock bas, à produire bientôt.",
+          "✅ = confirmée, stock OK.",
+          "En bas : la liste détaillée de chaque commande."
+        ],
+        conseil: "💡 Concentre-toi sur les 🔴 en priorité. Les chiffres en rouge = le nombre de pièces manquantes."
+      },
+      {
+        nom: "⚡ Stock",
+        titre: "Voir et corriger le stock de cheminées",
+        emoji: "🏭",
+        etapes: [
+          "Ouvre l'onglet ⚡ Stock.",
+          "Tu vois le stock actuel de chaque dimension (80cm, 100cm, 120cm...).",
+          "Si un chiffre est faux (erreur de saisie), appuie dessus pour corriger.",
+          "Tape la vraie quantité et valide."
+        ],
+        conseil: "💡 Fais une vérification hebdomadaire pour que Nesrine et Mehdi aient les bonnes infos."
+      },
+      {
+        nom: "💰 Compte",
+        titre: "Voir ton solde et tes paiements",
+        emoji: "💰",
+        etapes: [
+          "Ouvre l'onglet 💰 Compte.",
+          "Tu vois ton solde total (pièces produites × prix unitaire).",
+          "La liste de toutes tes productions avec date et montant.",
+          "Quand Mehdi te paye, le solde se remet à zéro."
+        ],
+        conseil: "💡 Si ton solde te semble incorrect, montre l'écran à Nesrine ou Mehdi."
+      }
+    ]
+  },
+
+  bilel: {
+    titre: "Guide Bilel — Livraisons",
+    couleur: "#BA7517",
+    onglets: [
+      {
+        nom: "🚚 Livraisons",
+        titre: "Gérer mes livraisons",
+        emoji: "🚚",
+        etapes: [
+          "Ouvre l'onglet 🚚 Livraisons.",
+          "Tu vois toutes les commandes confirmées à livrer.",
+          "Appuie sur une commande pour voir les détails (adresse, téléphone, montant COD).",
+          "Après livraison réussie → appuie sur ✅ Livré.",
+          "Si le client est absent → appuie sur 🔄 Retour.",
+          "Le montant encaissé s'ajoute automatiquement à ton compte."
+        ],
+        conseil: "⚠️ Toujours marquer la livraison sur l'app AVANT de remettre l'argent à Mehdi."
+      },
+      {
+        nom: "🗺️ Planifier ma tournée",
+        titre: "Planifier mon itinéraire",
+        emoji: "🗺️",
+        etapes: [
+          "Dans l'onglet Livraisons, appuie sur le bouton bleu 🗺️ Planifier ma tournée.",
+          "L'app regroupe tes livraisons par région (Centre, Est, Ouest).",
+          "Elle calcule l'heure de départ recommandée pour rentrer avant 20h.",
+          "⏰ : heure à laquelle partir de Boumerdès.",
+          "Appuie sur 🗺️ Démarrer navigation GPS → Google Maps s'ouvre directement.",
+          "Ou appuie sur 🚗 Mode conducteur pour appeler tes clients en 1 clic."
+        ],
+        conseil: "💡 Pour l'Extrême Est (Annaba, Tébessa) ou l'Extrême Ouest (Oran, Tlemcen) : pars à 4h du matin !"
+      },
+      {
+        nom: "🚗 Mode conducteur",
+        titre: "Appeler un client sans quitter Maps",
+        emoji: "📞",
+        etapes: [
+          "Appuie sur 🚗 Mode conducteur dans la popup de tournée.",
+          "Une nouvelle page s'ouvre avec tous tes clients dans l'ordre.",
+          "En haut : bouton bleu 🗺️ NAVIGATION GPS pour basculer sur Maps.",
+          "Reviens sur cet onglet en faisant Swipe (glisser entre les onglets).",
+          "Appuie sur le gros bouton vert 📞 APPELER pour appeler le client.",
+          "Après livraison → appuie sur ✓ Livré → passe automatiquement au suivant."
+        ],
+        conseil: "💡 Garde les 2 onglets ouverts : Maps pour la navigation, Mode conducteur pour les appels."
+      },
+      {
+        nom: "💰 Compte",
+        titre: "Voir mon solde à remettre",
+        emoji: "💰",
+        etapes: [
+          "Ouvre l'onglet 💰 Compte.",
+          "Tu vois le total que tu dois remettre à Mehdi.",
+          "La liste de toutes tes livraisons avec les montants encaissés.",
+          "Quand tu remets l'argent, Mehdi enregistre le dépôt.",
+          "Le solde repart à zéro après chaque dépôt."
+        ],
+        conseil: "⚠️ Ne remet jamais de l'argent sans que Mehdi l'enregistre sur l'app."
+      },
+      {
+        nom: "💸 Dépenses",
+        titre: "Enregistrer une dépense (carburant...)",
+        emoji: "⛽",
+        etapes: [
+          "Ouvre l'onglet 💸 Dépenses.",
+          "Appuie sur ➕ Ajouter une dépense.",
+          "Choisir le type : Carburant, Péage, Réparation, Autre.",
+          "Tape le montant et valide.",
+          "La dépense est déduite automatiquement de ton solde."
+        ],
+        conseil: "💡 Enregistre chaque dépense le jour même pour ne rien oublier."
+      }
+    ]
+  },
+
+  zahra: {
+    titre: "Guide Aïcha — Confirmations",
+    couleur: "#8E44AD",
+    onglets: [
+      {
+        nom: "📞 A confirmer",
+        titre: "Confirmer une commande",
+        emoji: "📞",
+        etapes: [
+          "Ouvre l'onglet 📞 A confirmer.",
+          "Tu vois la liste des clients à appeler.",
+          "🔴 Rappeler = déjà essayé, à rappeler.",
+          "Appuie sur 📞 pour appeler directement.",
+          "Appuie sur WA pour envoyer un message WhatsApp de confirmation.",
+          "Après l'appel, appuie sur Résultat et choisis ce qui s'est passé :",
+          "→ CONFIRME (le client veut la commande) → choisis Bilel ou Noest",
+          "→ RAPPELER (occupé, rappeler plus tard)",
+          "→ INJOIGNABLE (téléphone éteint)",
+          "→ FAUX (mauvais numéro ou pas commandé)",
+          "→ 🏛️ SHOWROOM (veut voir le produit avant d'acheter)"
+        ],
+        conseil: "💡 Commence toujours par les commandes sans badge (nouvelles). Les 🔴 et 🟠 sont les plus urgentes."
+      },
+      {
+        nom: "✅ Traitées",
+        titre: "Voir les commandes déjà traitées",
+        emoji: "✅",
+        etapes: [
+          "Ouvre l'onglet ✅ Traitées.",
+          "Tu vois toutes les commandes que tu as confirmées ou marquées.",
+          "Filtre par statut si besoin (Confirmées, Faux, Annulées...)."
+        ],
+        conseil: "💡 Si tu as fait une erreur sur une commande, dis-le à Nesrine ou Mehdi pour la corriger."
+      },
+      {
+        nom: "📋 Journee",
+        titre: "Enregistrer la journée de production (atelier)",
+        emoji: "🏭",
+        etapes: [
+          "Ouvre l'onglet 📋 Journee.",
+          "Enregistre ce que tu as fait dans la journée : finitions, emballages, ramassages Noest.",
+          "Tape la quantité pour chaque tâche.",
+          "Valide à la fin de la journée."
+        ],
+        conseil: "💡 Remplis cet onglet chaque soir avant de partir."
+      },
+      {
+        nom: "📡 Noest",
+        titre: "Suivre les envois Noest",
+        emoji: "📡",
+        etapes: [
+          "Ouvre l'onglet 📡 Noest.",
+          "Tu vois les colis à envoyer, en cours, livrés et retours.",
+          "À envoyer → prépare le colis et attends le ramassage.",
+          "En cours → le colis est chez Noest, en transit.",
+          "Livré ✅ → client a reçu.",
+          "Retour ↩️ → le client n'était pas là."
+        ],
+        conseil: "⚠️ Si tu vois un colis en retour, informe Nesrine immédiatement."
+      }
+    ]
+  },
+
+  nesrine: {
+    titre: "Guide Nesrine — Gestion complète",
+    couleur: "#6C3483",
+    onglets: [
+      {
+        nom: "📊 Dashboard",
+        titre: "Comprendre le dashboard",
+        emoji: "📊",
+        etapes: [
+          "Le Dashboard montre un résumé de toute l'activité du jour.",
+          "Total à encaisser = argent que Bilel doit remettre.",
+          "Commandes confirmées = prêtes à livrer.",
+          "En attente = à confirmer par Aïcha ou toi.",
+          "Production Moh = pièces fabriquées aujourd'hui."
+        ],
+        conseil: "💡 Vérifie le dashboard chaque matin pour voir l'état général."
+      },
+      {
+        nom: "➕ Cmde",
+        titre: "Enregistrer une nouvelle commande",
+        emoji: "➕",
+        etapes: [
+          "Ouvre l'onglet ➕ Cmde.",
+          "Remplis : Nom, Téléphone, Wilaya, Commune, Adresse.",
+          "Choisis le produit dans la liste.",
+          "Entre le montant.",
+          "Choisis le transporteur : Bilel ou Noest.",
+          "Appuie sur Enregistrer.",
+          "Un mail est envoyé automatiquement à toi et Mehdi."
+        ],
+        conseil: "💡 Toujours vérifier le numéro de téléphone avant de valider (évite les faux)."
+      },
+      {
+        nom: "📞 Confirm.",
+        titre: "Confirmer une commande",
+        emoji: "📞",
+        etapes: [
+          "Même fonctionnement que pour Aïcha.",
+          "Appuie sur 📞 pour appeler, WA pour WhatsApp.",
+          "Résultat → CONFIRME → choisis Bilel ou Noest.",
+          "Après confirmation : des boutons apparaissent pour notifier Bilel, Mehdi et Moh en 1 clic."
+        ],
+        conseil: "💡 Après avoir confirmé via Bilel, appuie sur les 3 boutons WA pour informer tout le monde."
+      },
+      {
+        nom: "🚚 Livraisons",
+        titre: "Suivre les livraisons Bilel",
+        emoji: "🚚",
+        etapes: [
+          "Ouvre l'onglet 🚚 Livraisons.",
+          "Tu vois toutes les livraisons en cours et terminées.",
+          "En attente = Bilel n'a pas encore livré.",
+          "Livré ✅ = encaissé.",
+          "Retour ↩️ = client absent, à replanifier."
+        ],
+        conseil: "💡 Contacte Bilel si une livraison est en attente depuis plus de 2 jours."
+      },
+      {
+        nom: "📦 Stock",
+        titre: "Voir le stock et planifier la production",
+        emoji: "📦",
+        etapes: [
+          "Ouvre l'onglet 📦 Stock.",
+          "Section Stock : cheminées disponibles par dimension.",
+          "🔴 = stock épuisé, 🟠 = stock bas (< 10 pièces).",
+          "Section Planification : commandes à produire pour Moh.",
+          "Appuie sur 📲 Envoyer à Moh pour lui envoyer un message WhatsApp avec les urgences."
+        ],
+        conseil: "⚠️ Si une dimension est en 🔴, contacte Moh immédiatement pour production urgente."
+      },
+      {
+        nom: "🛒 Achats",
+        titre: "Gérer le stock de matières premières",
+        emoji: "🛒",
+        etapes: [
+          "Ouvre l'onglet 🛒 Achats.",
+          "Tu vois toutes les matières (caissons, verre, électronique, consommables).",
+          "Appuie sur une matière pour mettre à jour la quantité après un achat.",
+          "Rouge = en dessous du minimum → acheter en urgence.",
+          "Orange = stock bas → prévoir achat."
+        ],
+        conseil: "💡 Mets à jour le stock après chaque achat pour que Moh voie les bonnes quantités."
+      },
+      {
+        nom: "📡 Noest",
+        titre: "Gérer les envois Noest",
+        emoji: "📡",
+        etapes: [
+          "Ouvre l'onglet 📡 Noest.",
+          "À envoyer : colis prêts, en attente de ramassage.",
+          "En cours : chez Noest, en transit.",
+          "Livrées : clients ont reçu.",
+          "Retours : à recontacter et replanifier.",
+          "Tu peux générer des étiquettes PDF en sélectionnant les colis."
+        ],
+        conseil: "⚠️ Vérifier les retours chaque jour et appeler les clients immédiatement."
+      }
+    ]
+  },
+
+  mehdi: {
+    titre: "Guide Mehdi — Management",
+    couleur: "#185FA5",
+    onglets: [
+      {
+        nom: "📊 Dashboard",
+        titre: "Lire le dashboard",
+        emoji: "📊",
+        etapes: [
+          "Le Dashboard montre tout en un coup d'œil.",
+          "Total à encaisser Bilel = argent en circulation sur le terrain.",
+          "Commandes confirmées = prêtes à livrer (surveille que Bilel avance).",
+          "En attente = Aïcha ou Nesrine doivent appeler.",
+          "Production Moh = pièces fabriquées."
+        ],
+        conseil: "💡 Si 'En attente' est élevé le soir, rappelle à Aïcha et Nesrine de rappeler."
+      },
+      {
+        nom: "📦 Cmdes",
+        titre: "Voir toutes les commandes",
+        emoji: "📦",
+        etapes: [
+          "Ouvre l'onglet 📦 Cmdes.",
+          "Tu vois l'historique complet des commandes.",
+          "Filtre par statut ou wilaya si besoin.",
+          "Tu peux modifier une commande en appuyant sur ✏️."
+        ],
+        conseil: "💡 Surveille les commandes 'En attente' depuis plus de 3 jours → relancer les agents."
+      },
+      {
+        nom: "📞 A conf.",
+        titre: "Confirmer une commande (en renfort)",
+        emoji: "📞",
+        etapes: [
+          "Ouvre l'onglet 📞 A conf.",
+          "Même fonctionnement que Aïcha et Nesrine.",
+          "Utilise cet onglet quand Nesrine ou Aïcha sont indisponibles.",
+          "Après confirmation : notifie Bilel et Moh via les boutons WA."
+        ],
+        conseil: "💡 En tant que commercial, tu peux aussi appeler les clients directement pour vendre."
+      },
+      {
+        nom: "🏭 Prod.",
+        titre: "Suivre la production Moh",
+        emoji: "🏭",
+        etapes: [
+          "Ouvre l'onglet 🏭 Prod.",
+          "Tu vois la production journalière et hebdomadaire de Moh.",
+          "Pièces produites, salaire calculé automatiquement.",
+          "Si la production est en retard → contacte Moh."
+        ],
+        conseil: "💡 Compare la production avec les commandes confirmées pour anticiper les manques."
+      },
+      {
+        nom: "📦 Stock",
+        titre: "Planifier la production",
+        emoji: "📦",
+        etapes: [
+          "Ouvre l'onglet 📦 Stock.",
+          "Tu vois le stock cheminées + les commandes à produire.",
+          "Appuie sur 📲 Envoyer à Moh pour lui communiquer les urgences.",
+          "Section Stock matières : surveille les alertes 🔴."
+        ],
+        conseil: "⚠️ Si stock = 0 sur une dimension avec des commandes en attente → urgence production !"
+      },
+      {
+        nom: "🚚 Bilel",
+        titre: "Gérer le compte de Bilel",
+        emoji: "🚚",
+        etapes: [
+          "Ouvre l'onglet 🚚 Bilel.",
+          "Tu vois le total que Bilel doit remettre.",
+          "Quand Bilel te remet l'argent, enregistre le dépôt.",
+          "Le solde de Bilel repart à zéro après chaque dépôt.",
+          "Tu vois l'historique complet des livraisons et dépôts."
+        ],
+        conseil: "⚠️ Enregistre chaque dépôt immédiatement pour éviter les disputes."
+      },
+      {
+        nom: "📈 Ads",
+        titre: "Suivre les campagnes publicitaires",
+        emoji: "📈",
+        etapes: [
+          "Ouvre l'onglet 📈 Ads.",
+          "Tu vois les performances de tes campagnes Facebook/Instagram.",
+          "Dépenses, commandes générées, coût par commande (CPA).",
+          "Vert ✅ = campagne rentable, Rouge 🔴 = à optimiser ou couper."
+        ],
+        conseil: "💡 Un bon CPA pour Le Vulcain = moins de 800 DA par commande."
+      }
+    ]
+  }
+};
+
+function rTutoTab(div){
+  var tuto = TUTOS[P];
+  if(!tuto){div.innerHTML='<div class="empty">Pas de guide disponible</div>';return;}
+
+  var col = tuto.couleur;
+  var html = '';
+
+  // Header
+  html += '<div style="background:linear-gradient(135deg,'+col+'22,'+col+'11);border:1px solid '+col+'44;border-radius:14px;padding:14px;margin-bottom:14px;text-align:center">'
+    +'<div style="font-size:24px;margin-bottom:4px">📖</div>'
+    +'<div style="font-size:15px;font-weight:900;color:#fff">'+tuto.titre+'</div>'
+    +'<div style="font-size:11px;color:#888;margin-top:4px">Appuie sur un onglet pour voir le guide</div>'
+  +'</div>';
+
+  // Accordéon par onglet
+  tuto.onglets.forEach(function(o, i){
+    var id = 'tuto_acc_'+i;
+    html += '<div style="background:#111;border-radius:12px;margin-bottom:8px;overflow:hidden;border:1px solid #222">'
+      +'<div onclick="document.getElementById(\''+id+'\').style.display=document.getElementById(\''+id+'\').style.display===\'block\'?\'none\':\'block\'" '
+        +'style="padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer">'
+        +'<span style="font-size:22px">'+o.emoji+'</span>'
+        +'<div style="flex:1">'
+          +'<div style="font-size:13px;font-weight:700;color:#fff">'+o.nom+'</div>'
+          +'<div style="font-size:11px;color:#888">'+o.titre+'</div>'
+        +'</div>'
+        +'<span style="color:#555;font-size:16px">›</span>'
+      +'</div>'
+      +'<div id="'+id+'" style="display:none;padding:0 14px 14px;border-top:1px solid #1a1a2e">';
+
+    // Étapes numérotées
+    o.etapes.forEach(function(e,j){
+      html += '<div style="display:flex;gap:10px;margin-top:10px;align-items:flex-start">'
+        +'<div style="width:22px;height:22px;background:'+col+';border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;margin-top:1px">'+(j+1)+'</div>'
+        +'<div style="font-size:13px;color:#ddd;line-height:1.5">'+e+'</div>'
+      +'</div>';
+    });
+
+    // Conseil
+    html += '<div style="background:rgba(255,255,255,.04);border-left:3px solid '+col+';border-radius:6px;padding:10px;margin-top:12px;font-size:12px;color:#aaa;line-height:1.5">'+o.conseil+'</div>';
+
+    html += '</div></div>';
+  });
+
+  // Footer
+  html += '<div style="text-align:center;padding:16px;color:#333;font-size:11px">Le Vulcain ERP · Besoin d\'aide ? Contacte Nesrine ou Mehdi</div>';
+
+  div.innerHTML = html;
+}
+
 function rContact(div){
   var cts=CONTACTS[P]||[];
   var html='<div class="slt">Contact equipe</div><div class="contact-grid">';
@@ -1785,6 +2243,14 @@ function _ouvrirModeConducteur(stops, mapsUrl, region){
   window.open(URL.createObjectURL(blob),'_blank');
 }
 
+// Pont entre le bouton HTML et _ouvrirModeConducteur
+function _lancerConducteur(btn){
+  var rKey = btn.getAttribute('data-rkey');
+  var data = window._tourneeData && window._tourneeData[rKey];
+  if(!data){alert('Données non disponibles. Fermez et relancez la planification.');return;}
+  _ouvrirModeConducteur(data.stops, data.mapsUrl, data.region);
+}
+
 function planifierTournee(){
   getAPIs(['commandes_bilel','stock_elec','stock_intrants'],function(_d){
     var enAtt=(_cmdes||[]).filter(function(c){
@@ -1971,14 +2437,14 @@ function planifierTournee(){
 
         // Bouton Maps — NAVIGATION DIRECTE
         var mapsUrl=_mapsUrl(stops_r);
-        var rKey=r;
-        var stopsJson=JSON.stringify(stops_r);
+        // Stocker les données dans un objet global AVANT de rendre le HTML
+        var rKey = r.replace(/ /g,'_');
+        window._tourneeData = window._tourneeData || {};
+        window._tourneeData[rKey] = {stops: stops_r, mapsUrl: mapsUrl, region: r};
+
         html+='<a href="'+mapsUrl+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#1a73e8;color:#fff;text-decoration:none;padding:11px;border-radius:9px;font-weight:700;font-size:13px;margin-bottom:6px">'
-          +'<span style="font-size:16px">🗺️</span>Démarrer navigation GPS</a>';
-        // Stocker les données pour le mode conducteur
-        window['_td_'+r.replace(/ /g,'_')]=stops_r;
-        window['_mu_'+r.replace(/ /g,'_')]=mapsUrl;
-        html+='<button onclick="_ouvrirModeConducteur(window[\"_td_'+r.replace(/ /g,'_')+'\"],window[\"_mu_'+r.replace(/ /g,'_')+'\"],\''+r.replace(/\'/g,'')+'\'" '
+          +'<span style="font-size:16px">🗺️</span>Démarrer navigation GPS</a>'
+        +'<button data-rkey="'+rKey+'" onclick="_lancerConducteur(this)" '
           +'style="width:100%;padding:11px;background:#27ae60;color:#fff;border:none;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;margin-bottom:0">'
           +'🚗 Mode conducteur — Appels 1 clic</button>'
         +'</div>';
